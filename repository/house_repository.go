@@ -10,4 +10,5 @@ import (
 type IHouseRepository interface {
 	FindHouseByID(ctx context.Context, tx *gorm.DB, houseID string) (domain.House, error)
 	CountPendingTransactions(ctx context.Context, tx *gorm.DB, houseID string) (int64, error)
+	ConfirmTransaction(ctx context.Context, tx *gorm.DB, transactionID string) error
 }
