@@ -58,21 +58,3 @@ func (service *HouseService) BuyHouseTransaction(ctx context.Context, userID, ho
 
 	return nil
 }
-
-func (service *HouseService) CancelTransaction(ctx context.Context, userID, transactionID string) error {
-	tx := service.DB.Begin()
-
-	if err := service.UserHouseTransactionRepository.CancelTransaction(ctx, tx, transactionID); err != nil {
-		return fmt.Errorf("failed to cancel transaction: %v", err)
-	}
-	return nil
-}
-
-func (service *HouseService) ConfirmTransaction(ctx context.Context, userID, transactionID string) error {
-	tx := service.DB.Begin()
-
-	if err := service.HouseRepository.ConfirmTransaction(ctx, tx, transactionID); err != nil {
-		return fmt.Errorf("failed to confirm transaction: %v", err)
-	}
-	return nil
-}

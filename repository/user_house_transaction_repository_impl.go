@@ -31,3 +31,53 @@ func (r *UserHouseTransactionRepository) CancelTransaction(ctx context.Context, 
 
 	return nil
 }
+
+func (r *UserHouseTransactionRepository) ConfirmTransaction(ctx context.Context, tx *gorm.DB, transactionID string) error {
+	tx = tx.WithContext(ctx).Begin()
+
+	var userTransaction domain.UserHouseTransaction
+	var house domain.House
+	var user domain.User
+
+	if err := tx.First(&userTransaction, "id = ?", transactionID).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to find transaction: %v", err)
+	}
+
+	if err := tx.First(&house, "id = ?", userTransaction.HouseID).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to find house: %v", err)
+	}
+
+	if err := tx.First(&user, "id = ?", userTransaction.UserID).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to find user: %v", err)
+	}
+
+	if house.UnitCount <= 0 {
+		tx.Rollback()
+		return fmt.Errorf("not enough units available")
+	}
+
+	house.UnitCount -= 1
+	user.WalletAmount -= float64(house.Size)
+
+	userTransaction.TransactionStatus = "sold"
+
+	if err := tx.Save(&house).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to update house: %v", err)
+	}
+
+	if err := tx.Save(&user).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to update user wallet: %v", err)
+	}
+
+	if err := tx.Save(&userTransaction).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to update transaction status: %v", err)
+	}
+
+	return tx.Commit().Error
+}
