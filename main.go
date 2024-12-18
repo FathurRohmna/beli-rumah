@@ -31,9 +31,10 @@ func main() {
 
 	paymentRepository := repository.NewPaymentRepository()
 
+	emailService := service.NewEmailService()
 	paymentService := service.NewPaymentService(paymentRepository, db)
 
-	paymentController := controller.NewPaymentController(paymentService)
+	paymentController := controller.NewPaymentController(paymentService, emailService)
 
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
