@@ -3,6 +3,7 @@ package main
 import (
 	"beli-tanah/app"
 	"beli-tanah/controller"
+	pkgmiddleware "beli-tanah/middleware"
 	"beli-tanah/repository"
 	"beli-tanah/service"
 	"context"
@@ -32,14 +33,16 @@ func main() {
 	paymentRepository := repository.NewPaymentRepository()
 	houseRepository := repository.NewHouseRepository()
 	userHouseTransactionRepository := repository.NewUserHouseTransactionRepository()
+	userRepository := repository.NewUserRepository()
 
 	emailService := service.NewEmailService()
 	paymentService := service.NewPaymentService(paymentRepository, db)
 	houseService := service.NewHouseService(houseRepository, userHouseTransactionRepository, db)
 	userHouseTransactionService := service.NewUserHouseTransactionService(userHouseTransactionRepository, db)
+	userService := service.NewUserService(userRepository, db)
 
 	paymentController := controller.NewPaymentController(paymentService, emailService)
-	houseController := controller.NewHouseController(houseService)
+	houseController := controller.NewHouseController(houseService, emailService)
 	userHouseTransactionController := controller.NewUserHouseTransactionController(userHouseTransactionService)
 
 	e := echo.New()
@@ -54,8 +57,17 @@ func main() {
 
 	e.POST("/buyhouse", houseController.BuyHouseTransaction)
 
-	e.POST("/transaction/cancel", userHouseTransactionController.CancelTransactionHandler)
-	e.POST("/transaction/confirm", userHouseTransactionController.ConfirmTransactionHandler)
+	e.POST(
+		"/transaction/cancel", 
+		userHouseTransactionController.CancelTransactionHandler, 
+		pkgmiddleware.TransactionTokenMiddleware(userService, userHouseTransactionService),
+	)
+	e.POST(
+		"/transaction/confirm", 
+		userHouseTransactionController.ConfirmTransactionHandler, 
+		pkgmiddleware.TransactionTokenMiddleware(userService, userHouseTransactionService), 
+		pkgmiddleware.HouseAvailabilityMiddleware(houseService),
+	)
 
 	go func() {
 		if err := e.Start(":" + port); err != nil && err != http.ErrServerClosed {

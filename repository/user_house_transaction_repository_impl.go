@@ -3,6 +3,7 @@ package repository
 import (
 	"beli-tanah/model/domain"
 	"context"
+	"errors"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -80,4 +81,17 @@ func (r *UserHouseTransactionRepository) ConfirmTransaction(ctx context.Context,
 	}
 
 	return tx.Commit().Error
+}
+
+func (r *UserHouseTransactionRepository) FindTransactionById(ctx context.Context, tx *gorm.DB, transactionID string) (domain.UserHouseTransaction, error) {
+	var transaction domain.UserHouseTransaction
+	err := tx.WithContext(ctx).Where("id = ?", transactionID).First(&transaction).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return domain.UserHouseTransaction{}, errors.New("transaction not found")
+		}
+		return domain.UserHouseTransaction{}, err
+	}
+	return transaction, nil
 }

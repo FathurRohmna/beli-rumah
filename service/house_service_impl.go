@@ -3,11 +3,14 @@ package service
 import (
 	"beli-tanah/helper"
 	"beli-tanah/model/domain"
+	"beli-tanah/model/web"
 	"beli-tanah/repository"
 	"context"
 	"fmt"
+	"os"
 	"time"
 
+	"github.com/golang-jwt/jwt"
 	"gorm.io/gorm"
 )
 
@@ -25,7 +28,7 @@ func NewHouseService(houseRepository repository.IHouseRepository, userHouseTrans
 	}
 }
 
-func (service *HouseService) BuyHouseTransaction(ctx context.Context, userID, houseID string) error {
+func (service *HouseService) CheckHouseAvailability(ctx context.Context, houseID string) error {
 	tx := service.DB.Begin()
 	defer helper.CommitOrRollback(tx)
 
@@ -43,6 +46,17 @@ func (service *HouseService) BuyHouseTransaction(ctx context.Context, userID, ho
 		return fmt.Errorf("no available slots, please wait until another transaction completes")
 	}
 
+	return nil
+}
+
+func (service *HouseService) BuyHouseTransaction(ctx context.Context, userID, houseID string) (web.BuyHouseResponse, error) {
+	if err := service.CheckHouseAvailability(ctx, houseID); err != nil {
+		return web.BuyHouseResponse{}, err
+	}
+
+	tx := service.DB.Begin()
+	defer helper.CommitOrRollback(tx)
+
 	expiryTime := time.Now().Add(1 * time.Minute)
 	transaction := domain.UserHouseTransaction{
 		UserID:            userID,
@@ -51,10 +65,19 @@ func (service *HouseService) BuyHouseTransaction(ctx context.Context, userID, ho
 		ExpiredAt:         expiryTime,
 	}
 
-	_, err = service.UserHouseTransactionRepository.CreateTransaction(ctx, tx, transaction)
+	_, err := service.UserHouseTransactionRepository.CreateTransaction(ctx, tx, transaction)
 	if err != nil {
-		return fmt.Errorf("failed to create transaction: %v", err)
+		return web.BuyHouseResponse{}, fmt.Errorf("failed to create transaction: %v", err)
 	}
 
-	return nil
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id":        transaction.UserID,
+		"transaction_id": transaction.ID,
+	})
+	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_AUTH_EMAIL_URL")))
+	helper.PanicIfError(err)
+
+	return web.BuyHouseResponse{
+		TransactionToken: tokenString,
+	}, nil
 }

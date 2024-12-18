@@ -11,4 +11,5 @@ type IUserHouseTransactionRepository interface {
 	CreateTransaction(ctx context.Context, tx *gorm.DB, transaction domain.UserHouseTransaction) (domain.UserHouseTransaction, error)
 	CancelTransaction(ctx context.Context, tx *gorm.DB, transactionID string) error
 	ConfirmTransaction(ctx context.Context, tx *gorm.DB, transactionID string) error
+	FindTransactionById(ctx context.Context, tx *gorm.DB, transactionID string) (domain.UserHouseTransaction, error)
 }

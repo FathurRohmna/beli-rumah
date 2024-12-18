@@ -7,11 +7,9 @@ import (
 	"beli-tanah/model/web"
 	"beli-tanah/repository"
 	"context"
-	"log"
 	"os"
 
 	"github.com/golang-jwt/jwt"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -75,14 +73,29 @@ func (service *UserService) Register(ctx context.Context, userRequest web.Regist
 	createdUser, err := service.UserRepository.Save(ctx, tx, user)
 	helper.PanicIfError(err)
 
-	userID, err := uuid.Parse(createdUser.ID)
+	return web.UserResponse{
+		ID:    createdUser.ID,
+		Email: createdUser.Email,
+		Name:  createdUser.Name,
+	}
+}
+
+func (service *UserService) GetUserById(ctx context.Context, userId string) web.UserResponse {
+	tx := service.DB.Begin()
+	defer helper.CommitOrRollback(tx)
+
+	user, err := service.UserRepository.FindByUserId(ctx, tx, userId)
 	if err != nil {
-		log.Fatalf("Invalid user ID: %v", err)
+		if err.Error() == "user not found" {
+			panic(exception.NewDataNotFoundError("user not found"))
+		}
+
+		panic(err)
 	}
 
 	return web.UserResponse{
-		ID:    userID,
-		Email: createdUser.Email,
-		Name:  createdUser.Name,
+		ID:    userId,
+		Email: user.Email,
+		Name:  user.Name,
 	}
 }

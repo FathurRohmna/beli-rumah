@@ -34,3 +34,16 @@ func (r *UserRepository) FindByEmail(ctx context.Context, tx *gorm.DB, email str
 	}
 	return user, nil
 }
+
+func (r *UserRepository) FindByUserId(ctx context.Context, tx *gorm.DB, userId string) (domain.User, error) {
+	var user domain.User
+	err := tx.WithContext(ctx).Where("id = ?", userId).First(&user).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return domain.User{}, errors.New("user not found")
+		}
+		return domain.User{}, err
+	}
+	return user, nil
+}

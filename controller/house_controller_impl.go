@@ -9,18 +9,21 @@ import (
 
 type HouseController struct {
 	HouseService service.IHouseService
+	EmailService service.IEmailService
 }
 
-func NewHouseController(houseService service.IHouseService) IHouseController {
-	return &HouseController{HouseService: houseService}
+func NewHouseController(houseService service.IHouseService, emailService service.IEmailService) IHouseController {
+	return &HouseController{HouseService: houseService, EmailService: emailService}
 }
 
-func (h *HouseController) BuyHouseTransaction(c echo.Context) error {
+func (controller *HouseController) BuyHouseTransaction(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	if err := h.HouseService.BuyHouseTransaction(ctx, "", ""); err != nil {
+	token, err := controller.HouseService.BuyHouseTransaction(ctx, "", "")
+	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
+	controller.EmailService.SendEmail(ctx, "fatur23460@gmail.com", "Testing email here", token.TransactionToken)
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Transaction cancelled"})
 }

@@ -1,7 +1,11 @@
 package service
 
-import "context"
+import (
+	"beli-tanah/model/web"
+	"context"
+)
 
 type IHouseService interface {
-	BuyHouseTransaction(ctx context.Context, userID, houseID string) error
+	CheckHouseAvailability(ctx context.Context, houseID string) error 
+	BuyHouseTransaction(ctx context.Context, userID, houseID string) (web.BuyHouseResponse, error)
 }
