@@ -34,7 +34,11 @@ func (s *EmailService) SendEmail(ctx context.Context, to, subject, body string) 
 		return fmt.Errorf("failed to create Gmail service: %w", err)
 	}
 
-	message := fmt.Sprintf("From: me\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", to, subject, body)
+	contentType := "text/html; charset=\"utf-8\""
+	message := fmt.Sprintf(
+		"From: me\r\nTo: %s\r\nSubject: %s\r\nContent-Type: %s\r\n\r\n%s",
+		to, subject, contentType, body,
+	)
 	msg := &gmail.Message{
 		Raw: helper.EncodeBase64URLSafe([]byte(message)),
 	}
