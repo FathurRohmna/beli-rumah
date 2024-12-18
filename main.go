@@ -30,11 +30,17 @@ func main() {
 	db := app.NewDB()
 
 	paymentRepository := repository.NewPaymentRepository()
+	houseRepository := repository.NewHouseRepository()
+	userHouseTransactionRepository := repository.NewUserHouseTransactionRepository()
 
 	emailService := service.NewEmailService()
 	paymentService := service.NewPaymentService(paymentRepository, db)
+	houseService := service.NewHouseService(houseRepository, userHouseTransactionRepository, db)
+	userHouseTransactionService := service.NewUserHouseTransactionService(userHouseTransactionRepository, db)
 
 	paymentController := controller.NewPaymentController(paymentService, emailService)
+	houseController := controller.NewHouseController(houseService)
+	userHouseTransactionController := controller.NewUserHouseTransactionController(userHouseTransactionService)
 
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -45,6 +51,11 @@ func main() {
 	e.Use(middleware.Recover())
 
 	e.POST("/topup", paymentController.TopUpUserWallet)
+
+	e.POST("/buyhouse", houseController.BuyHouseTransaction)
+
+	e.POST("/transaction/cancel", userHouseTransactionController.CancelTransactionHandler)
+	e.POST("/transaction/confirm", userHouseTransactionController.ConfirmTransactionHandler)
 
 	go func() {
 		if err := e.Start(":" + port); err != nil && err != http.ErrServerClosed {
