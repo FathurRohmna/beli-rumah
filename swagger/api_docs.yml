@@ -1,0 +1,513 @@
+openapi: "3.0.0"
+info:
+  title: "Hacktivagram API"
+  description: "Hacktivagram API"
+  version: "1.0"
+servers:
+  - url: "http://localhost:8080"
+
+paths:
+  /users/register:
+    post:
+      tags:
+        - users
+      summary: "Save new user data"
+      description: "Endpoint to register a new user."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                full_name:
+                  type: "string"
+                  example: "John Doe"
+                email:
+                  type: "string"
+                  example: "john.doe@example.com"
+                username:
+                  type: "string"
+                  example: "johndoe"
+                password:
+                  type: "string"
+                  example: "example_password"
+                age:
+                  type: "integer"
+                  example: 25
+              required:
+                - full_name
+                - email
+                - username
+                - password
+                - age
+      responses:
+        201:
+          description: "User successfully registered."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "User successfully registered."
+                  data: 
+                    type: "object"
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+        400:
+          $ref: "#/components/responses/BadRequest"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /topup:
+    post:
+      tags:
+        - users
+      summary: "Login to get access token"
+      description: "Endpoint to login for registered users."
+      responses:
+        200:
+          description: "Login successful."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  token:
+                    type: "string"
+                    example: "jwt_token_value"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /posts:
+    post:
+      tags:
+        - posts
+      summary: "Create a new post"
+      description: "Endpoint to create a new post."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                content:
+                  type: "string"
+                  example: "This is my first post."
+                image_url:
+                  type: "string"
+                  example: "https://example.com/image.jpg"
+              required:
+                - user_id
+                - content
+                - image_url
+      security:
+        - ApiKeyAuth: []
+      responses:
+        201:
+          description: "Post successfully created."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Post successfully created."
+                  post:
+                    $ref: '#/components/schemas/Post'
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+    get:
+      tags:
+        - posts
+      summary: "Display all posts"
+      description: "Endpoint to display all posts."
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: "Successfully retrieved all posts."
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: '#/components/schemas/Post'
+
+  /posts/{id}:
+    get:
+      tags:
+        - posts
+      summary: "Display post details"
+      description: "Endpoint to display post details by ID."
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: "Post details successfully found."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  post:
+                    $ref: '#/components/schemas/Post'
+                  comments:
+                    type: "array"
+                    items:
+                      $ref: '#/components/schemas/Comment'
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        404:
+          $ref: '#/components/responses/NotFoundError'
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+    delete:
+      tags:
+        - posts
+      summary: "Delete post"
+      description: "Endpoint to delete post by ID."
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: "Post successfully deleted."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Post successfully deleted."
+                  post:
+                    $ref: '#/components/schemas/Post'
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        404:
+          $ref: '#/components/responses/NotFoundError'
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /comments:
+    post:
+      tags:
+        - comments
+      summary: "Create a new comment on a post"
+      description: "This endpoint creates a new comment for a given post."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                post_id:
+                  type: "string"
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+                content:
+                  type: "string"
+                  example: "This is a great post!"
+              required:
+                - post_id
+                - content
+      security:
+        - ApiKeyAuth: []
+      responses:
+        201:
+          description: "Comment successfully created."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Comment successfully created."
+                  comment:
+                    $ref: '#/components/schemas/Comment'
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /comments/{id}:
+    get:
+      tags:
+        - comments
+      summary: "Get a comment by ID"
+      description: "This endpoint retrieves a comment by its ID, including the owner of the comment and the associated post data."
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: "Comment and associated post successfully found."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  comment:
+                    $ref: '#/components/schemas/Comment'
+                  post:
+                    $ref: '#/components/schemas/Post'
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        404:
+          $ref: '#/components/responses/NotFoundError'
+        500:
+          $ref: "#/components/responses/InternalServerError"
+        
+    delete:
+      tags:
+        - comments
+      summary: "Delete a comment by ID"
+      description: "This endpoint deletes a comment by its ID. Only the comment owner can delete it."
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: "Comment successfully deleted."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Comment successfully deleted."
+                  comment:
+                    $ref: '#/components/schemas/Comment'
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        404:
+          $ref: '#/components/responses/NotFoundError'
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /activities:
+    get:
+      tags:
+        - activities
+      summary: "Get user activities"
+      description: "This endpoint retrieves a list of activities for the logged-in user."
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: "User activities successfully retrieved."
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  type: "object"
+                  properties:
+                    activity_id:
+                      type: "string"
+                      example: "12345"
+                    description:
+                      type: "string"
+                      example: "User commented on a post."
+                    timestamp:
+                      type: "string"
+                      format: "date-time"
+                      example: "2024-12-15T08:00:00Z"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  schemas:
+    User:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        full_name:
+          type: "string"
+          example: "John Doe"
+        email:
+          type: "string"
+          example: "john.doe@example.com"
+        username:
+          type: "string"
+          example: "johndoe"
+        age:
+          type: "integer"
+          example: 25
+
+    Post:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        user_id:
+          type: "string"
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        content:
+          type: "string"
+          example: "This is my first post."
+        image_url:
+          type: "string"
+          example: "https://example.com/image.jpg"
+
+    Comment:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        author_id:
+          type: "string"
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        content:
+          type: "string"
+          example: "Nice post!"
+
+    Activity:
+      type: "object"
+      properties:
+        activity_id:
+          type: "string"
+          example: "12345"
+        description:
+          type: "string"
+          example: "User commented on a post."
+        timestamp:
+          type: "string"
+          format: "date-time"
+          example: "2024-12-15T08:00:00Z"
+        
+  responses:
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              info:
+                type: string
+                example: "Invalid password"
+              message:
+                type: string
+                example: "UNAUTHORIZED"
+              
+    BadRequest:
+      description: "bad request error"
+      content:
+        application/json:
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: string
+                example: "BAD REQUEST"
+              info:
+                type: "string"
+                example: "invalid request parameters"
+
+    ValidationError:
+      description: Validation Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "BAD REQUEST"
+              data:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                      example: "Name"
+                    error:
+                      type: string
+                      example: "This field is required"
+                      
+    NotFoundError:
+      description: Resource Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "NOT FOUND"
+              info:
+                type: string
+                example: "Customer not found"
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "INTERNAL SERVER ERROR"
+              info:
+                type: string
+                example: "Unexpected error occurred"
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
