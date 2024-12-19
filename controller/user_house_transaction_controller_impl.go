@@ -17,10 +17,17 @@ func NewUserHouseTransactionController(userHouseTransactionService service.IUser
 
 func (h *UserHouseTransactionController) CancelTransactionHandler(c echo.Context) error {
 	ctx := c.Request().Context()
+	transactionID, ok := c.Get("transaction_id").(string)
+	if !ok || transactionID == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid or missing house ID", "message": "UNAUTHORIZED"})
+	}
 
-	transactionID := c.Param("transaction_id")
+	userID, ok := c.Get("user_id").(string)
+	if !ok || userID == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid or missing user ID", "message": "UNAUTHORIZED"})
+	}
 
-	if err := h.UserHouseTransactionService.CancelTransaction(ctx, "", transactionID); err != nil {
+	if err := h.UserHouseTransactionService.CancelTransaction(ctx, userID, transactionID); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
@@ -29,10 +36,17 @@ func (h *UserHouseTransactionController) CancelTransactionHandler(c echo.Context
 
 func (h *UserHouseTransactionController) ConfirmTransactionHandler(c echo.Context) error {
 	ctx := c.Request().Context()
+	transactionID, ok := c.Get("transaction_id").(string)
+	if !ok || transactionID == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid or missing house ID", "message": "UNAUTHORIZED"})
+	}
 
-	transactionID := c.Param("transaction_id")
+	userID, ok := c.Get("user_id").(string)
+	if !ok || userID == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid or missing user ID", "message": "UNAUTHORIZED"})
+	}
 
-	if err := h.UserHouseTransactionService.ConfirmTransaction(ctx, "", transactionID); err != nil {
+	if err := h.UserHouseTransactionService.ConfirmTransaction(ctx, userID, transactionID); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 

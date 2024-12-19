@@ -65,7 +65,7 @@ func (service *UserService) Register(ctx context.Context, userRequest web.Regist
 	hash, err := bcrypt.GenerateFromPassword([]byte(userRequest.Password), 10)
 	helper.PanicIfError(err)
 
-	user := domain.User{
+	user := domain.UserHouse{
 		Email:    userRequest.Email,
 		Password: string(hash),
 		Name:     userRequest.Name,

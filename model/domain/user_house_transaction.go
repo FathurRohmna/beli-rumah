@@ -9,6 +9,4 @@ type UserHouseTransaction struct {
 	TransactionStatus string    `gorm:"type:house_availability;not null;default:'pending'" json:"transaction_status"`
 	
 	ExpiredAt         time.Time `gorm:"not null" json:"expired_at"`
-	CreatedAt         time.Time `gorm:"type:timestamp;default:CURRENT_TIMESTAMP;not null" json:"created_at"`
-	UpdatedAt         time.Time `gorm:"type:timestamp;default:CURRENT_TIMESTAMP;not null" json:"updated_at"`
 }

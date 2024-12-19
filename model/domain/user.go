@@ -2,7 +2,7 @@ package domain
 
 import "time"
 
-type User struct {
+type UserHouse struct {
 	ID           string  `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
 	Name         string  `gorm:"type:varchar(255);not null" json:"name"`
 	Email        string  `gorm:"type:varchar(255);not null;unique" json:"email"`

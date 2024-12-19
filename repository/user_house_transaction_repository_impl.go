@@ -34,13 +34,15 @@ func (r *UserHouseTransactionRepository) CancelTransaction(ctx context.Context, 
 }
 
 func (r *UserHouseTransactionRepository) ConfirmTransaction(ctx context.Context, tx *gorm.DB, transactionID string) error {
-	tx = tx.WithContext(ctx).Begin()
+	tx = tx.WithContext(ctx)
 
 	var userTransaction domain.UserHouseTransaction
 	var house domain.House
-	var user domain.User
+	var user domain.UserHouse
 
 	if err := tx.First(&userTransaction, "id = ?", transactionID).Error; err != nil {
+		fmt.Print(err)
+
 		tx.Rollback()
 		return fmt.Errorf("failed to find transaction: %v", err)
 	}

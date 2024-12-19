@@ -364,6 +364,129 @@ paths:
         500:
           $ref: "#/components/responses/InternalServerError"
 
+  /transaction/cancel:
+    post:
+      summary: "Cancel a transaction"
+      description: "Cancels a house transaction if it's still pending."
+      tags:
+        - "Transactions"
+      parameters:
+        - name: tokenId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "JWT token containing user and transaction information."
+      responses:
+        200:
+          description: "Transaction successfully cancelled."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Transaction cancelled"
+        401:
+          description: "Unauthorized request due to missing or invalid token."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  info:
+                    type: string
+                    example: "Token is required"
+                  message:
+                    type: string
+                    example: "UNAUTHORIZED"
+        500:
+          description: "Internal server error."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal server error."
+
+  /transaction/confirm:
+    post:
+      summary: "Confirm a transaction"
+      description: "Confirms a house transaction and marks it as sold."
+      tags:
+        - "Transactions"
+      parameters:
+        - name: tokenId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "JWT token containing user and transaction information."
+      responses:
+        200:
+          description: "Transaction successfully confirmed as sold."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Transaction confirmed as sold"
+        401:
+          description: "Unauthorized request due to missing or invalid token."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  info:
+                    type: string
+                    example: "Invalid or missing token"
+                  message:
+                    type: string
+                    example: "UNAUTHORIZED"
+        500:
+          description: "Internal server error."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal server error."
+      
+  /buyhouse:
+    post:
+      summary: "Buy a house transaction"
+      description: "Handles the purchase of a house, generates a transaction token, and sends a confirmation email."
+      tags:
+        - "House Transactions"
+      responses:
+        200:
+          description: "Transaction successfully completed."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Transaction cancelled"
+        500:
+          description: "Internal server error."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal server error."
 components:
   schemas:
     User:

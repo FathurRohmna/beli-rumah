@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TABLE users (
+CREATE TABLE user_houses (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT  NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -13,10 +13,10 @@ CREATE TABLE users (
 
 CREATE TABLE transactions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id),
+    user_id UUID NOT NULL REFERENCES user_houses(id),
     order_id VARCHAR(255) NOT NULL,
     amount FLOAT NOT NULL,
-    status VARCHAR(50) DEFAULT 'pending'
+    status VARCHAR(50) DEFAULT 'pending',
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -42,7 +42,7 @@ CREATE TYPE house_availability AS ENUM ('pending', 'sold', 'cancelled');
 CREATE TABLE user_house_transactions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES user_houses(id) ON DELETE CASCADE,
     house_id UUID NOT NULL REFERENCES houses(id) ON DELETE CASCADE,
 
     transaction_status house_availability NOT NULL DEFAULT 'pending',

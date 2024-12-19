@@ -19,7 +19,7 @@ func NewHouseController(houseService service.IHouseService, emailService service
 func (controller *HouseController) BuyHouseTransaction(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	token, err := controller.HouseService.BuyHouseTransaction(ctx, "", "")
+	token, err := controller.HouseService.BuyHouseTransaction(ctx, "0e4f279d-03ea-46dc-a07a-92d057e1e470", "792d35f3-92cb-4c45-bad0-2042ab02c4aa")
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}

@@ -55,9 +55,10 @@ func (service *UserHouseTransactionService) FindTransactionById(ctx context.Cont
 	}
 
 	return web.UserHouseTransactionResponse{
-		ID:      transaction.ID,
-		UserID:  transaction.UserID,
-		Status:  transaction.TransactionStatus,
-		HouseID: transaction.HouseID,
+		ID:        transaction.ID,
+		UserID:    transaction.UserID,
+		Status:    transaction.TransactionStatus,
+		HouseID:   transaction.HouseID,
+		ExpiredAt: transaction.ExpiredAt,
 	}, nil
 }

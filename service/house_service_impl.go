@@ -57,7 +57,7 @@ func (service *HouseService) BuyHouseTransaction(ctx context.Context, userID, ho
 	tx := service.DB.Begin()
 	defer helper.CommitOrRollback(tx)
 
-	expiryTime := time.Now().Add(1 * time.Minute)
+	expiryTime := time.Now().Add(10 * time.Minute)
 	transaction := domain.UserHouseTransaction{
 		UserID:            userID,
 		HouseID:           houseID,
@@ -65,14 +65,14 @@ func (service *HouseService) BuyHouseTransaction(ctx context.Context, userID, ho
 		ExpiredAt:         expiryTime,
 	}
 
-	_, err := service.UserHouseTransactionRepository.CreateTransaction(ctx, tx, transaction)
+	transactionResp, err := service.UserHouseTransactionRepository.CreateTransaction(ctx, tx, transaction)
 	if err != nil {
 		return web.BuyHouseResponse{}, fmt.Errorf("failed to create transaction: %v", err)
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":        transaction.UserID,
-		"transaction_id": transaction.ID,
+		"transaction_id": transactionResp.ID,
 	})
 	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_AUTH_EMAIL_URL")))
 	helper.PanicIfError(err)

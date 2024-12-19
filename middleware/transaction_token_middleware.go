@@ -2,8 +2,10 @@ package pkgmiddleware
 
 import (
 	"beli-tanah/service"
+	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
@@ -12,7 +14,7 @@ import (
 func TransactionTokenMiddleware(userService service.IUserService, transactionService service.IUserHouseTransactionService) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			tokenString := c.Param("tokenId")
+			tokenString := c.QueryParam("tokenId")
 			if tokenString == "" {
 				return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Token is required", "message": "UNAUTHORIZED"})
 			}
@@ -30,6 +32,7 @@ func TransactionTokenMiddleware(userService service.IUserService, transactionSer
 			if !ok || userID == "" {
 				return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid token: user ID not found", "message": "UNAUTHORIZED"})
 			}
+			fmt.Print(claims)
 
 			transactionID, ok := claims["transaction_id"].(string)
 			if !ok || transactionID == "" {
@@ -39,8 +42,17 @@ func TransactionTokenMiddleware(userService service.IUserService, transactionSer
 			ctx := c.Request().Context()
 			user := userService.GetUserById(ctx, userID)
 			transaction, err := transactionService.FindTransactionById(ctx, transactionID)
+
 			if err != nil || user.ID != transaction.UserID {
 				return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid authorization", "message": "UNAUTHORIZED"})
+			}
+
+			if transaction.ExpiredAt.Before(time.Now()) {
+				return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Transaction expired", "message": "UNAUTHORIZED"})
+			}
+
+			if transaction.Status != "pending" {
+				return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Transaction is not pending", "message": "UNAUTHORIZED"})
 			}
 
 			c.Set("user_id", userID)

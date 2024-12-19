@@ -58,14 +58,14 @@ func main() {
 	e.POST("/buyhouse", houseController.BuyHouseTransaction)
 
 	e.POST(
-		"/transaction/cancel", 
-		userHouseTransactionController.CancelTransactionHandler, 
+		"/transaction/cancel",
+		userHouseTransactionController.CancelTransactionHandler,
 		pkgmiddleware.TransactionTokenMiddleware(userService, userHouseTransactionService),
 	)
 	e.POST(
-		"/transaction/confirm", 
-		userHouseTransactionController.ConfirmTransactionHandler, 
-		pkgmiddleware.TransactionTokenMiddleware(userService, userHouseTransactionService), 
+		"/transaction/confirm",
+		userHouseTransactionController.ConfirmTransactionHandler,
+		pkgmiddleware.TransactionTokenMiddleware(userService, userHouseTransactionService),
 		pkgmiddleware.HouseAvailabilityMiddleware(houseService),
 	)
 
