@@ -54,6 +54,7 @@ func main() {
 	e.Use(middleware.Recover())
 
 	e.POST("/topup", paymentController.TopUpUserWallet)
+	e.POST("/payment/midtrans-callback", paymentController.MidtransCallback)
 
 	e.POST("/buyhouse", houseController.BuyHouseTransaction)
 

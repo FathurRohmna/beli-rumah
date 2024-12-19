@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"beli-tanah/model/domain"
 	"beli-tanah/service"
 	"bytes"
 	"html/template"
@@ -54,4 +55,37 @@ func (controller *PaymentController) TopUpUserWallet(c echo.Context) error {
 	controller.EmailService.SendEmail(ctx, "fatur23460@gmail.com", "Testing email here", emailBody)
 
 	return c.JSON(http.StatusOK, posts)
+}
+
+func (controller *PaymentController) MidtransCallback(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var callbackPayload domain.MidtransCallback
+	if err := c.Bind(&callbackPayload); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Invalid payload",
+		})
+	}
+
+	isValid := controller.PaymentService.VerifyMidtransSignature(callbackPayload)
+	if !isValid {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": "Invalid signature",
+		})
+	}
+
+	if callbackPayload.TransactionStatus == "settlement" || callbackPayload.TransactionStatus == "capture" {
+		err := controller.PaymentService.UpdateWalletAndTransaction(ctx, callbackPayload.OrderID, callbackPayload.GrossAmount)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error": err.Error(),
+			})
+		}
+	} else if callbackPayload.TransactionStatus == "cancel" || callbackPayload.TransactionStatus == "expire" || callbackPayload.TransactionStatus == "deny" {
+		log.Printf("Transaction %s was not successful. Status: %s\n", callbackPayload.OrderID, callbackPayload.TransactionStatus)
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "Callback processed successfully",
+	})
 }

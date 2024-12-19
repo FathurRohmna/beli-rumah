@@ -7,6 +7,8 @@ import (
 	"beli-tanah/model/web"
 	"beli-tanah/repository"
 	"context"
+	"crypto/sha512"
+	"fmt"
 	"time"
 
 	"github.com/midtrans/midtrans-go"
@@ -57,4 +59,22 @@ func (service *PaymentService) TopUpUserWalletGeneratePayment(ctx context.Contex
 	return web.TopUpUserWalletGeneratePaymentResponse{
 		PaymentUrl: snapResp.RedirectURL,
 	}
+}
+
+func (service *PaymentService) UpdateWalletAndTransaction(ctx context.Context, transactionID string, amount float64) error {
+	tx := service.DB.Begin()
+	defer helper.CommitOrRollback(tx)
+
+	err := service.PaymentRepository.UpdateWalletAndTransaction(ctx, tx, transactionID, amount)
+	helper.PanicIfError(err)
+
+	return nil
+}
+
+func (service *PaymentService) VerifyMidtransSignature(callback domain.MidtransCallback) bool {
+	serverKey := config.SetupMidtrans().ServerKey
+	data := callback.OrderID + fmt.Sprintf("%.0f", callback.GrossAmount) + serverKey
+
+	expectedSignature := fmt.Sprintf("%x", sha512.Sum512([]byte(data)))
+	return expectedSignature == callback.SignatureKey
 }
