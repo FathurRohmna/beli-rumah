@@ -59,6 +59,6 @@ func (service *UserHouseTransactionService) FindTransactionById(ctx context.Cont
 		UserID:    transaction.UserID,
 		Status:    transaction.TransactionStatus,
 		HouseID:   transaction.HouseID,
-		ExpiredAt: transaction.ExpiredAt,
+		ExpiredAt: transaction.ExpiredAt.Local(),
 	}, nil
 }

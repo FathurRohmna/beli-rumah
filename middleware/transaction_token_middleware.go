@@ -2,7 +2,6 @@ package pkgmiddleware
 
 import (
 	"beli-tanah/service"
-	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -32,7 +31,6 @@ func TransactionTokenMiddleware(userService service.IUserService, transactionSer
 			if !ok || userID == "" {
 				return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid token: user ID not found", "message": "UNAUTHORIZED"})
 			}
-			fmt.Print(claims)
 
 			transactionID, ok := claims["transaction_id"].(string)
 			if !ok || transactionID == "" {
@@ -47,12 +45,13 @@ func TransactionTokenMiddleware(userService service.IUserService, transactionSer
 				return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid authorization", "message": "UNAUTHORIZED"})
 			}
 
-			if transaction.ExpiredAt.Before(time.Now()) {
-				return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Transaction expired", "message": "UNAUTHORIZED"})
-			}
-
 			if transaction.Status != "pending" {
 				return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Transaction is not pending", "message": "UNAUTHORIZED"})
+			}
+
+			now := time.Now()
+			if transaction.ExpiredAt.Before(now) {
+				return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Transaction expired", "message": "UNAUTHORIZED"})
 			}
 
 			c.Set("user_id", userID)

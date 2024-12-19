@@ -57,7 +57,7 @@ func (service *HouseService) BuyHouseTransaction(ctx context.Context, userID, ho
 	tx := service.DB.Begin()
 	defer helper.CommitOrRollback(tx)
 
-	expiryTime := time.Now().Add(10 * time.Minute)
+	expiryTime := time.Now().Add(2 * time.Minute).Local().UTC()
 	transaction := domain.UserHouseTransaction{
 		UserID:            userID,
 		HouseID:           houseID,
