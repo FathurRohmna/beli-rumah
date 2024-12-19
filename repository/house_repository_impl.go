@@ -2,6 +2,7 @@ package repository
 
 import (
 	"beli-tanah/model/domain"
+	"beli-tanah/model/web"
 	"context"
 	"fmt"
 	"time"
@@ -51,4 +52,24 @@ func (r *HouseRepository) CountPendingTransactions(ctx context.Context, tx *gorm
 	}
 
 	return count, nil
+}
+
+func (r *HouseRepository) GetHouses(ctx context.Context, tx *gorm.DB, category web.HouseCategory, latitude, longitude float64, page, limit int) ([]domain.House, int64, error) {
+	var houses []domain.House
+	var totalCount int64
+	tx = tx.WithContext(ctx)
+
+	offset := (page - 1) * limit
+
+	query := tx.Model(&domain.House{}).Where("category = ?", category).
+		Order("ST_Distance(ST_SetSRID(ST_Point(longitude, latitude), 4326), ST_SetSRID(ST_Point(?, ?), 4326)) ASC").
+		Offset(offset).
+		Limit(limit)
+
+	err := query.Find(&houses).Count(&totalCount).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return houses, totalCount, nil
 }

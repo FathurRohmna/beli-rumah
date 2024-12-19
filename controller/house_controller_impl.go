@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"beli-tanah/model/web"
 	"beli-tanah/service"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -43,4 +45,42 @@ func (controller *HouseController) BuyHouseTransaction(c echo.Context) error {
 	controller.EmailService.SendEmail(ctx, "frohman@students.hacktiv8.ac.id", "Testing email here", token.TransactionToken)
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Transaction cancelled"})
+}
+
+func (controller *HouseController) GetHouses(c echo.Context) error {
+	category := c.QueryParam("category")
+	page, _ := strconv.Atoi(c.QueryParam("page"))
+	if page == 0 {
+		page = 1
+	}
+	limit, _ := strconv.Atoi(c.QueryParam("limit"))
+	if limit == 0 {
+		limit = 10
+	}
+	latitude, _ := strconv.ParseFloat(c.QueryParam("latitude"), 64)
+	longitude, _ := strconv.ParseFloat(c.QueryParam("longitude"), 64)
+
+	var houseCategory web.HouseCategory
+	switch category {
+	case "apartment":
+		houseCategory = web.Apartment
+	case "villa":
+		houseCategory = web.Villa
+	case "house":
+		houseCategory = web.House
+	case "residentialComplex":
+		houseCategory = web.ResidentialComplex
+	default:
+		return c.JSON(http.StatusBadRequest, "Invalid category")
+	}
+
+	houses, totalCount, err := controller.HouseService.GetHouses(c.Request().Context(), houseCategory, latitude, longitude, page, limit)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"houses":     houses,
+		"totalCount": totalCount,
+	})
 }

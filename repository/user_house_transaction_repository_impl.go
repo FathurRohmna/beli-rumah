@@ -56,12 +56,12 @@ func (r *UserHouseTransactionRepository) ConfirmTransaction(ctx context.Context,
 		return fmt.Errorf("failed to find user: %v", err)
 	}
 
-	if user.WalletAmount < float64(house.Size) {
+	if user.WalletAmount < house.PricePerMonth {
 		tx.Rollback()
 		return fmt.Errorf("insufficient wallet balance")
 	}
 
-	user.WalletAmount -= float64(house.Size)
+	user.WalletAmount -= house.PricePerMonth
 
 	userTransaction.TransactionStatus = "sold"
 

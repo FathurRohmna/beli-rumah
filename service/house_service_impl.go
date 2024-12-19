@@ -118,3 +118,16 @@ func (service *HouseService) BuyHouseTransaction(ctx context.Context, userID, ho
 		TransactionToken: tokenString,
 	}, nil
 }
+
+func (service *HouseService) GetHouses(ctx context.Context, category web.HouseCategory, latitude, longitude float64, page, limit int) ([]web.HouseResponse, int64, error) {
+	tx := service.DB.Begin()
+	defer helper.CommitOrRollback(tx)
+	houses, totalCount, err := service.HouseRepository.GetHouses(ctx, tx, category, latitude, longitude, page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	houseResponses := helper.MapDomainToBuyHouseResponse(houses)
+
+	return houseResponses, totalCount, nil
+}

@@ -30,8 +30,8 @@ CREATE TABLE houses (
     longitude DOUBLE PRECISION NOT NULL,
     address TEXT NOT NULL,
     category house_category NOT NULL,
-    size INTEGER NOT NULL,
     unit_count INT,
+    price_per_month FLOAT NOT NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
