@@ -2,7 +2,9 @@ package controller
 
 import (
 	"beli-tanah/service"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -19,11 +21,26 @@ func NewHouseController(houseService service.IHouseService, emailService service
 func (controller *HouseController) BuyHouseTransaction(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	token, err := controller.HouseService.BuyHouseTransaction(ctx, "0e4f279d-03ea-46dc-a07a-92d057e1e470", "792d35f3-92cb-4c45-bad0-2042ab02c4aa")
+	startDate, err := time.Parse("02-01-2006", "12-12-2024")
+	if err != nil {
+		log.Fatalf("Failed to parse start date: %v", err)
+	}
+
+	endDate, err := time.Parse("02-01-2006", "31-12-2024")
+	if err != nil {
+		log.Fatalf("Failed to parse end date: %v", err)
+	}
+
+	token, err := controller.HouseService.BuyHouseTransaction(ctx,
+		"0e4f279d-03ea-46dc-a07a-92d057e1e470",
+		"792d35f3-92cb-4c45-bad0-2042ab02c4aa",
+		startDate,
+		endDate,
+	)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	controller.EmailService.SendEmail(ctx, "fatur23460@gmail.com", "Testing email here", token.TransactionToken)
+	controller.EmailService.SendEmail(ctx, "frohman@students.hacktiv8.ac.id", "Testing email here", token.TransactionToken)
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Transaction cancelled"})
 }

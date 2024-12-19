@@ -34,10 +34,11 @@ func main() {
 	houseRepository := repository.NewHouseRepository()
 	userHouseTransactionRepository := repository.NewUserHouseTransactionRepository()
 	userRepository := repository.NewUserRepository()
+	houseKeyRepository := repository.NewHouseKeyRepository()
 
 	emailService := service.NewEmailService()
 	paymentService := service.NewPaymentService(paymentRepository, db)
-	houseService := service.NewHouseService(houseRepository, userHouseTransactionRepository, db)
+	houseService := service.NewHouseService(houseRepository, userHouseTransactionRepository, houseKeyRepository, db)
 	userHouseTransactionService := service.NewUserHouseTransactionService(userHouseTransactionRepository, db)
 	userService := service.NewUserService(userRepository, db)
 

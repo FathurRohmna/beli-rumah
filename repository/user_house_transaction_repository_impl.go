@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -41,8 +42,6 @@ func (r *UserHouseTransactionRepository) ConfirmTransaction(ctx context.Context,
 	var user domain.UserHouse
 
 	if err := tx.First(&userTransaction, "id = ?", transactionID).Error; err != nil {
-		fmt.Print(err)
-
 		tx.Rollback()
 		return fmt.Errorf("failed to find transaction: %v", err)
 	}
@@ -57,19 +56,23 @@ func (r *UserHouseTransactionRepository) ConfirmTransaction(ctx context.Context,
 		return fmt.Errorf("failed to find user: %v", err)
 	}
 
-	if house.UnitCount <= 0 {
+	if user.WalletAmount < float64(house.Size) {
 		tx.Rollback()
-		return fmt.Errorf("not enough units available")
+		return fmt.Errorf("insufficient wallet balance")
 	}
 
-	house.UnitCount -= 1
 	user.WalletAmount -= float64(house.Size)
 
 	userTransaction.TransactionStatus = "sold"
 
-	if err := tx.Save(&house).Error; err != nil {
+	houseKey := domain.HouseKey{
+		TransactionID: transactionID,
+		CreatedAt:     time.Now(),
+	}
+
+	if err := tx.Create(&houseKey).Error; err != nil {
 		tx.Rollback()
-		return fmt.Errorf("failed to update house: %v", err)
+		return fmt.Errorf("failed to create house key: %v", err)
 	}
 
 	if err := tx.Save(&user).Error; err != nil {

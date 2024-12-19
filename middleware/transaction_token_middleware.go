@@ -2,6 +2,7 @@ package pkgmiddleware
 
 import (
 	"beli-tanah/service"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -54,8 +55,12 @@ func TransactionTokenMiddleware(userService service.IUserService, transactionSer
 				return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Transaction expired", "message": "UNAUTHORIZED"})
 			}
 
+			fmt.Print(transaction)
+
 			c.Set("user_id", userID)
 			c.Set("transaction_id", transactionID)
+			c.Set("start_date", transaction.StartDate)
+			c.Set("end_date", transaction.EndDate)
 			c.Set("house_id", transaction.HouseID)
 			return next(c)
 		}
@@ -70,9 +75,19 @@ func HouseAvailabilityMiddleware(houseService service.IHouseService) echo.Middle
 				return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid or missing house ID", "message": "UNAUTHORIZED"})
 			}
 
+			startDate, ok := c.Get("start_date").(time.Time)
+			if !ok {
+				return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid or missing start_date ID", "message": "UNAUTHORIZED"})
+			}
+
+			endDate, ok := c.Get("end_date").(time.Time)
+			if !ok {
+				return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid or missing end_date ID", "message": "UNAUTHORIZED"})
+			}
+
 			ctx := c.Request().Context()
 
-			if err := houseService.CheckHouseAvailability(ctx, houseID); err != nil {
+			if err := houseService.CheckHouseAvailability(ctx, houseID, startDate, endDate); err != nil {
 				return c.JSON(http.StatusUnauthorized, map[string]string{"info": "House is not available", "message": "UNAUTHORIZED"})
 			}
 

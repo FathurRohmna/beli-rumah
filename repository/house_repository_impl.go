@@ -25,14 +25,14 @@ func (r *HouseRepository) FindHouseByID(ctx context.Context, tx *gorm.DB, houseI
 	return house, nil
 }
 
-func (r *HouseRepository) CountPendingTransactions(ctx context.Context, tx *gorm.DB, houseID string) (int64, error) {
+func (r *HouseRepository) CountPendingTransactions(ctx context.Context, tx *gorm.DB, houseID string, startDate, endDate time.Time) (int64, error) {
 	var count int64
-	now := time.Now()
 
 	if err := tx.WithContext(ctx).Model(&domain.UserHouseTransaction{}).
-		Where("house_id = ? AND transaction_status = 'pending' AND expired_at > ?", houseID, now).
+		Where("house_id = ? AND transaction_status = 'pending' AND expired_at > ? AND start_date <= ? AND (end_date IS NULL OR end_date >= ?)",
+			houseID, time.Now(), endDate, startDate).
 		Count(&count).Error; err != nil {
-		return 0, fmt.Errorf("error counting pending transactions: %v", err)
+		return 0, fmt.Errorf("error counting pending transactions in range: %v", err)
 	}
 
 	return count, nil

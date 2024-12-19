@@ -37,6 +37,13 @@ CREATE TABLE houses (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
+CREATE TABLE house_keys (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    transaction_id UUID NOT NULL REFERENCES user_house_transactions(id),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
 CREATE TYPE house_availability AS ENUM ('pending', 'sold', 'cancelled');
 
 CREATE TABLE user_house_transactions (
@@ -44,6 +51,9 @@ CREATE TABLE user_house_transactions (
 
     user_id UUID NOT NULL REFERENCES user_houses(id) ON DELETE CASCADE,
     house_id UUID NOT NULL REFERENCES houses(id) ON DELETE CASCADE,
+
+    start_date DATE NOT NULL,
+    end_date DATE NULL,
 
     transaction_status house_availability NOT NULL DEFAULT 'pending',
     expired_at TIMESTAMP NOT NULL

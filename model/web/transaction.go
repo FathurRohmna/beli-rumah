@@ -12,5 +12,8 @@ type UserHouseTransactionResponse struct {
 	HouseID string `json:"house_id"`
 	Status  string `json:"status"`
 
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
+
 	ExpiredAt time.Time `json:"expired_at"`
 }
