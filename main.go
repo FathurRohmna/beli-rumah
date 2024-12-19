@@ -6,6 +6,7 @@ import (
 	pkgmiddleware "beli-tanah/middleware"
 	"beli-tanah/repository"
 	"beli-tanah/service"
+	"beli-tanah/validator"
 	"context"
 	"log"
 	"net/http"
@@ -30,6 +31,8 @@ func main() {
 
 	db := app.NewDB()
 
+	userValidator := validator.NewUserValidator()
+
 	paymentRepository := repository.NewPaymentRepository()
 	houseRepository := repository.NewHouseRepository()
 	userHouseTransactionRepository := repository.NewUserHouseTransactionRepository()
@@ -42,9 +45,10 @@ func main() {
 	userHouseTransactionService := service.NewUserHouseTransactionService(userHouseTransactionRepository, db)
 	userService := service.NewUserService(userRepository, db)
 
-	paymentController := controller.NewPaymentController(paymentService, emailService)
+	paymentController := controller.NewPaymentController(paymentService, emailService, userService)
 	houseController := controller.NewHouseController(houseService, emailService)
 	userHouseTransactionController := controller.NewUserHouseTransactionController(userHouseTransactionService)
+	userController := controller.NewUserController(userService, userValidator)
 
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -54,10 +58,19 @@ func main() {
 	}))
 	e.Use(middleware.Recover())
 
-	e.POST("/topup", paymentController.TopUpUserWallet)
-	e.POST("/payment/midtrans-callback", paymentController.MidtransCallback)
+	api := e.Group("/api")
 
-	e.POST("/buyhouse", houseController.BuyHouseTransaction)
+	usersApi := api.Group("/users")
+
+	usersApi.POST("/login", userController.Login)
+	usersApi.POST("/register", userController.Register)
+	usersApi.POST("/topup", paymentController.TopUpUserWallet, pkgmiddleware.JWTMiddleware)
+
+	internalApi := api.Group("/internal")
+
+	internalApi.POST("/topup/midtrans-callback", paymentController.MidtransCallback)
+
+	api.POST("/buyhouse", houseController.BuyHouseTransaction)
 
 	e.POST(
 		"/transaction/cancel",

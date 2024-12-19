@@ -4,7 +4,7 @@ info:
   description: "Hacktivagram API"
   version: "1.0"
 servers:
-  - url: "http://localhost:8080"
+  - url: "http://localhost:8080/api"
 
 paths:
   /users/register:
@@ -20,27 +20,19 @@ paths:
             schema:
               type: "object"
               properties:
-                full_name:
+                name:
                   type: "string"
                   example: "John Doe"
                 email:
                   type: "string"
                   example: "john.doe@example.com"
-                username:
-                  type: "string"
-                  example: "johndoe"
                 password:
                   type: "string"
                   example: "example_password"
-                age:
-                  type: "integer"
-                  example: 25
               required:
-                - full_name
+                - name
                 - email
-                - username
                 - password
-                - age
       responses:
         201:
           description: "User successfully registered."
@@ -62,12 +54,66 @@ paths:
         500:
           $ref: "#/components/responses/InternalServerError"
 
-  /topup:
+  /users/login:
     post:
       tags:
         - users
       summary: "Login to get access token"
       description: "Endpoint to login for registered users."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                email:
+                  type: "string"
+                  example: "john.doe"
+                password:
+                  type: "string"
+                  example: "example_password"
+              required:
+                - email
+                - password
+      responses:
+        200:
+          description: "Login successful."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  token:
+                    type: "string"
+                    example: "jwt_token_value"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /users/topup:
+    post:
+      tags:
+        - users
+      summary: "Top up user wallet"
+      description: "Endpoint to generate a payment request for top-up operations."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: float
+                  description: "The amount to top up."
+                  example: 100000.50
+      security:
+        - ApiKeyAuth: []
       responses:
         200:
           description: "Login successful."

@@ -23,12 +23,12 @@ func NewHouseController(houseService service.IHouseService, emailService service
 func (controller *HouseController) BuyHouseTransaction(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	startDate, err := time.Parse("02-01-2006", "09-12-2024")
+	startDate, err := time.Parse("02-01-2006", "09-11-2024")
 	if err != nil {
 		log.Fatalf("Failed to parse start date: %v", err)
 	}
 
-	endDate, err := time.Parse("02-01-2006", "10-12-2024")
+	endDate, err := time.Parse("02-01-2006", "10-11-2024")
 	if err != nil {
 		log.Fatalf("Failed to parse end date: %v", err)
 	}

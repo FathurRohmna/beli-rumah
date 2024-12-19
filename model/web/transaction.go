@@ -17,3 +17,7 @@ type UserHouseTransactionResponse struct {
 
 	ExpiredAt time.Time `json:"expired_at"`
 }
+
+type TopUpUserWalletGeneratePaymentRequest struct {
+	Amount float64 `json:"amount"`
+}

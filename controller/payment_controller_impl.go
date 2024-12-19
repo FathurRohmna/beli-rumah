@@ -1,12 +1,14 @@
 package controller
 
 import (
+	"beli-tanah/helper"
 	"beli-tanah/model/domain"
+	"beli-tanah/model/web"
 	"beli-tanah/service"
-	"bytes"
-	"html/template"
+	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -14,45 +16,48 @@ import (
 type PaymentController struct {
 	PaymentService service.IPaymentService
 	EmailService   service.IEmailService
+	UserService    service.IUserService
 }
 
-func RenderTemplate(data map[string]string) (string, error) {
-	tmpl, err := template.ParseFiles("template/email_template.html")
-	if err != nil {
-		return "", err
-	}
-
-	var rendered bytes.Buffer
-	if err := tmpl.Execute(&rendered, data); err != nil {
-		return "", err
-	}
-
-	return rendered.String(), nil
-}
-
-func NewPaymentController(activityLogService service.IPaymentService, emailService service.IEmailService) IPaymentController {
+func NewPaymentController(activityLogService service.IPaymentService, emailService service.IEmailService, userService service.IUserService) IPaymentController {
 	return &PaymentController{
 		PaymentService: activityLogService,
 		EmailService:   emailService,
+		UserService:    userService,
 	}
 }
 
 func (controller *PaymentController) TopUpUserWallet(c echo.Context) error {
-	ctx := c.Request().Context()
-	posts := controller.PaymentService.TopUpUserWalletGeneratePayment(ctx, "f9f58304-a625-4037-9acc-e1bff70db0a0", 12000)
-
-	data := map[string]string{
-		"Name":  "Fathur",
-		"Event": "meeting",
-		"Date":  "Monday, Dec 25th",
+	userID, ok := c.Get("user_id").(string)
+	if !ok || userID == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid or missing user ID", "message": "UNAUTHORIZED"})
 	}
 
-	emailBody, err := RenderTemplate(data)
+	var request web.TopUpUserWalletGeneratePaymentRequest
+	if err := c.Bind(&request); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"info": "Invalid request payload", "message": "BAD REQUEST"})
+	}
+
+	ctx := c.Request().Context()
+	posts := controller.PaymentService.TopUpUserWalletGeneratePayment(ctx, userID, request.Amount)
+
+	expirationTime := time.Now().Add(24 * time.Hour)
+	data := map[string]string{
+		"ExpiredDate": expirationTime.Format("2 Jan 2006 15:04"),
+		"MidtransUrl": posts.PaymentUrl,
+	}
+
+	emailBody, err := helper.RenderTemplate(data, "template/request_top_up_success.html")
 	if err != nil {
 		log.Fatalf("Error rendering template: %v", err)
 	}
 
-	controller.EmailService.SendEmail(ctx, "fatur23460@gmail.com", "Testing email here", emailBody)
+	user := controller.UserService.GetUserById(ctx, userID)
+	fmt.Print(user)
+	err = controller.EmailService.SendEmail(ctx, user.Email, "Top Up success", emailBody)
+	if err != nil {
+		log.Fatalf("Error send email: %v", err)
+	}
 
 	return c.JSON(http.StatusOK, posts)
 }
