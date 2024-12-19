@@ -84,3 +84,14 @@ func (controller *HouseController) GetHouses(c echo.Context) error {
 		"totalCount": totalCount,
 	})
 }
+
+func (c *HouseController) GetHouseDetailWithTransactions(ctx echo.Context) error {
+	houseID := ctx.Param("house_id")
+
+	houseDetail, err := c.HouseService.GetHouseDetailWithTransactions(ctx.Request().Context(), houseID)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": "could not fetch house details"})
+	}
+
+	return ctx.JSON(http.StatusOK, houseDetail)
+}

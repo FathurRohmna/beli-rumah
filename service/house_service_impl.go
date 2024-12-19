@@ -131,3 +131,36 @@ func (service *HouseService) GetHouses(ctx context.Context, category web.HouseCa
 
 	return houseResponses, totalCount, nil
 }
+
+func (s *HouseService) GetHouseDetailWithTransactions(ctx context.Context, houseID string) (web.HouseDetailResponse, error) {
+	tx := s.DB.Begin()
+	defer helper.CommitOrRollback(tx)
+
+	house, transactions, err := s.HouseRepository.GetHouseWithTransactions(ctx, tx, houseID)
+	if err != nil {
+		return web.HouseDetailResponse{}, err
+	}
+
+	var transactionResponses []web.UserHouseTransactionResponse
+	for _, transaction := range transactions {
+		transactionResponses = append(transactionResponses, web.UserHouseTransactionResponse{
+			UserID:          transaction.UserID,
+			StartDate:       transaction.StartDate,
+			EndDate:         transaction.EndDate,
+			ExpiredAt:       transaction.ExpiredAt,
+		})
+	}
+
+	return web.HouseDetailResponse{
+		ID:            house.ID,
+		Latitude:      house.Latitude,
+		Longitude:     house.Longitude,
+		Address:       house.Address,
+		Category:      house.Category,
+		UnitCount:     house.UnitCount,
+		PricePerMonth: house.PricePerMonth,
+		CreatedAt:     house.CreatedAt,
+		UpdatedAt:     house.UpdatedAt,
+		UserHouseTransactions: transactionResponses,
+	}, nil
+}

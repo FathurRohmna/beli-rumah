@@ -73,3 +73,21 @@ func (r *HouseRepository) GetHouses(ctx context.Context, tx *gorm.DB, category w
 
 	return houses, totalCount, nil
 }
+
+func (r *HouseRepository) GetHouseWithTransactions(ctx context.Context, tx *gorm.DB, houseID string) (domain.House, []domain.UserHouseTransaction, error) {
+	var house domain.House
+	var transactions []domain.UserHouseTransaction
+	tx = tx.WithContext(ctx)
+
+	err := tx.Where("id = ?", houseID).First(&house).Error
+	if err != nil {
+		return domain.House{}, nil, err
+	}
+
+	err = tx.Preload("UserHouseTransactions").Where("house_id = ?", houseID).Order("start_date DESC").Find(&transactions).Error
+	if err != nil {
+		return domain.House{}, nil, err
+	}
+
+	return house, transactions, nil
+}
