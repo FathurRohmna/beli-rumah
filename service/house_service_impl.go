@@ -30,13 +30,9 @@ func NewHouseService(houseRepository repository.IHouseRepository, userHouseTrans
 	}
 }
 
-func (service *HouseService) CheckPaymentAvailability(ctx context.Context, houseID string, startDate time.Time, endDate time.Time) error {
+func (service *HouseService) CheckPaymentAvailability(ctx context.Context, houseID string, startDate, endDate time.Time) error {
 	tx := service.DB.Begin()
 	defer helper.CommitOrRollback(tx)
-
-	if err := service.CheckHouseAvailability(ctx, houseID, startDate, endDate); err != nil {
-		return fmt.Errorf("house is not available: %v", err)
-	}
 
 	house, err := service.HouseRepository.FindHouseByID(ctx, tx, houseID)
 	if err != nil {
@@ -45,15 +41,20 @@ func (service *HouseService) CheckPaymentAvailability(ctx context.Context, house
 
 	activeKeys, err := service.HouseKeyRepository.CountActiveHouseKeys(ctx, tx, houseID, startDate, endDate)
 	if err != nil {
-		return fmt.Errorf("error checking pending transactions: %v", err)
+		return fmt.Errorf("error checking active keys: %v", err)
 	}
 
 	availableSlot := int64(house.UnitCount) - activeKeys
+	if availableSlot <= 0 {
+		return fmt.Errorf("no available slots for the selected dates")
+	}
 
 	pendingCount, err := service.HouseRepository.CountPendingTransactions(ctx, tx, houseID, startDate, endDate)
 	if err != nil {
 		return fmt.Errorf("error checking pending transactions: %v", err)
 	}
+
+	fmt.Print(pendingCount, activeKeys, availableSlot)
 
 	if pendingCount >= availableSlot {
 		return fmt.Errorf("no available slots, please wait until another transaction completes")
@@ -62,7 +63,7 @@ func (service *HouseService) CheckPaymentAvailability(ctx context.Context, house
 	return nil
 }
 
-func (service *HouseService) CheckHouseAvailability(ctx context.Context, houseID string, startDate time.Time, endDate time.Time) error {
+func (service *HouseService) CheckHouseAvailability(ctx context.Context, houseID string, startDate, endDate time.Time) error {
 	tx := service.DB.Begin()
 	defer helper.CommitOrRollback(tx)
 
@@ -73,18 +74,18 @@ func (service *HouseService) CheckHouseAvailability(ctx context.Context, houseID
 
 	activeKeys, err := service.HouseKeyRepository.CountActiveHouseKeys(ctx, tx, houseID, startDate, endDate)
 	if err != nil {
-		return fmt.Errorf("error checking pending transactions: %v", err)
+		return fmt.Errorf("error checking active keys: %v", err)
 	}
 
 	if activeKeys >= int64(house.UnitCount) {
-		return fmt.Errorf("no available slots, please wait until another dates")
+		return fmt.Errorf("no available slots for the selected dates")
 	}
 
 	return nil
 }
 
 func (service *HouseService) BuyHouseTransaction(ctx context.Context, userID, houseID string, startDate time.Time, endDate time.Time) (web.BuyHouseResponse, error) {
-	if err := service.CheckHouseAvailability(ctx, houseID, startDate, endDate); err != nil {
+	if err := service.CheckPaymentAvailability(ctx, houseID, startDate, endDate); err != nil {
 		return web.BuyHouseResponse{}, err
 	}
 
