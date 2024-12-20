@@ -3,6 +3,7 @@ package controller
 import (
 	"beli-tanah/model/web"
 	"beli-tanah/service"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -21,28 +22,43 @@ func NewHouseController(houseService service.IHouseService, emailService service
 }
 
 func (controller *HouseController) BuyHouseTransaction(c echo.Context) error {
-	ctx := c.Request().Context()
+	userID, ok := c.Get("user_id").(string)
+	if !ok || userID == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid or missing user ID", "message": "UNAUTHORIZED"})
+	}
 
-	startDate, err := time.Parse("02-01-2006", "09-11-2024")
+	userEmail, ok := c.Get("user_email").(string)
+	if !ok || userEmail == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid or missing user ID", "message": "UNAUTHORIZED"})
+	}
+
+	ctx := c.Request().Context()
+	var request web.BuyHouseTransactionRequest
+
+	if err := c.Bind(&request); err != nil {
+		fmt.Print(request)
+
+		return c.JSON(http.StatusBadRequest, map[string]string{"info": "Invalid request payload", "message": "BAD REQUEST"})
+	}
+
+	startDate, err := time.Parse("2006-01-02", request.StartDate)
 	if err != nil {
 		log.Fatalf("Failed to parse start date: %v", err)
 	}
 
-	endDate, err := time.Parse("02-01-2006", "10-11-2024")
+	endDate, err := time.Parse("2006-01-02", request.EndDate)
 	if err != nil {
 		log.Fatalf("Failed to parse end date: %v", err)
 	}
 
-	token, err := controller.HouseService.BuyHouseTransaction(ctx,
-		"0e4f279d-03ea-46dc-a07a-92d057e1e470",
-		"792d35f3-92cb-4c45-bad0-2042ab02c4aa",
-		startDate,
-		endDate,
-	)
+	token, err := controller.HouseService.BuyHouseTransaction(ctx, userID, request.HouseID, startDate, endDate)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	controller.EmailService.SendEmail(ctx, "frohman@students.hacktiv8.ac.id", "Testing email here", token.TransactionToken)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	controller.EmailService.SendEmail(ctx, userEmail, "Konfirmasi pembelian sekarang", token.TransactionToken)
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Transaction cancelled"})
 }

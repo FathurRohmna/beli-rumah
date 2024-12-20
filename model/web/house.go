@@ -41,3 +41,9 @@ type HouseDetailResponse struct {
 	UpdatedAt             time.Time                      `json:"updated_at"`
 	UserHouseTransactions []UserHouseTransactionResponse `json:"user_house_transactions"`
 }
+
+type BuyHouseTransactionRequest struct {
+	HouseID   string `json:"house_id"`
+	StartDate string `json:"start_date"`
+	EndDate   string `json:"end_date"`
+}

@@ -70,14 +70,15 @@ func main() {
 
 	internalApi.POST("/topup/midtrans-callback", paymentController.MidtransCallback)
 
-	api.POST("/buyhouse", houseController.BuyHouseTransaction)
+	housesApi := api.Group("/houses")
 
-	e.POST(
+	housesApi.POST("/buyhouse", houseController.BuyHouseTransaction, pkgmiddleware.JWTMiddleware)
+	housesApi.POST(
 		"/transaction/cancel",
 		userHouseTransactionController.CancelTransactionHandler,
 		pkgmiddleware.TransactionTokenMiddleware(userService, userHouseTransactionService),
 	)
-	e.POST(
+	housesApi.POST(
 		"/transaction/confirm",
 		userHouseTransactionController.ConfirmTransactionHandler,
 		pkgmiddleware.TransactionTokenMiddleware(userService, userHouseTransactionService),

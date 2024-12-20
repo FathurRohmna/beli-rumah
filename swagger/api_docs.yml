@@ -410,7 +410,7 @@ paths:
         500:
           $ref: "#/components/responses/InternalServerError"
 
-  /transaction/cancel:
+  /houses/transaction/cancel:
     post:
       summary: "Cancel a transaction"
       description: "Cancels a house transaction if it's still pending."
@@ -458,7 +458,7 @@ paths:
                     type: string
                     example: "Internal server error."
 
-  /transaction/confirm:
+  /houses/transaction/confirm:
     post:
       summary: "Confirm a transaction"
       description: "Confirms a house transaction and marks it as sold."
@@ -506,12 +506,35 @@ paths:
                     type: string
                     example: "Internal server error."
       
-  /buyhouse:
+  /houses/buyhouse:
     post:
       summary: "Buy a house transaction"
       description: "Handles the purchase of a house, generates a transaction token, and sends a confirmation email."
       tags:
         - "House Transactions"
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                house_id:
+                  type: string
+                  description: "The ID of the house being purchased."
+                  example: "house123"
+                start_date:
+                  type: string
+                  format: date
+                  description: "The start date of the transaction."
+                  example: "2024-12-20"
+                end_date:
+                  type: string
+                  format: date
+                  description: "The end date of the transaction."
+                  example: "2024-12-22"
       responses:
         200:
           description: "Transaction successfully completed."

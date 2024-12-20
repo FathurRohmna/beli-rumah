@@ -45,7 +45,8 @@ func (service *UserService) Login(ctx context.Context, userRequest web.LoginUser
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
+		"user_id":    user.ID,
+		"user_email": user.Email,
 	})
 	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
 	helper.PanicIfError(err)

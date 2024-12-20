@@ -26,12 +26,18 @@ func JWTMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid token", "message": "UNAUTHORIZED"})
 		}
 
-		studentID, ok := claims["user_id"].(string)
-		if !ok || studentID == "" {
+		userID, ok := claims["user_id"].(string)
+		if !ok || userID == "" {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid token: user ID not found", "message": "UNAUTHORIZED"})
 		}
 
-		c.Set("user_id", studentID)
+		userEmail, ok := claims["user_email"].(string)
+		if !ok || userID == "" {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid token: user Email not found", "message": "UNAUTHORIZED"})
+		}
+
+		c.Set("user_id", userID)
+		c.Set("user_email", userEmail)
 		return next(c)
 	}
 }
