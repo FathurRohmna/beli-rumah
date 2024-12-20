@@ -106,9 +106,10 @@ func (service *UserService) GetMyDetail(ctx context.Context, userId string) web.
 
 	return web.MyDetailResponse{
 		User: web.UserResponse{
-			ID:    myDetail.User.ID,
-			Email: myDetail.User.Email,
-			Name:  myDetail.User.Name,
+			ID:           myDetail.User.ID,
+			Email:        myDetail.User.Email,
+			Name:         myDetail.User.Name,
+			WalletAmount: myDetail.User.WalletAmount,
 		},
 		Transactions: mapTransactionsToResponse(myDetail.Transactions),
 		Houses:       mapHousesToResponse(myDetail.Houses),

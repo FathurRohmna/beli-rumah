@@ -16,11 +16,12 @@ import (
 
 type HouseController struct {
 	HouseService service.IHouseService
+	UserService  service.IUserService
 	EmailService service.IEmailService
 }
 
-func NewHouseController(houseService service.IHouseService, emailService service.IEmailService) IHouseController {
-	return &HouseController{HouseService: houseService, EmailService: emailService}
+func NewHouseController(houseService service.IHouseService, emailService service.IEmailService, userSerbiceService service.IUserService) IHouseController {
+	return &HouseController{HouseService: houseService, EmailService: emailService, UserService: userSerbiceService}
 }
 
 func (controller *HouseController) BuyHouseTransaction(c echo.Context) error {
@@ -72,6 +73,13 @@ func (controller *HouseController) BuyHouseTransaction(c echo.Context) error {
 		"ExpiredDate": token.ExpiredAt.Local().Format("2 Jan 2006 15:04"),
 		"MidtransUrl": token.TransactionToken,
 		"Token":       token.TransactionToken,
+	}
+
+	user := controller.UserService.GetUserById(c.Request().Context(), userID)
+	house, _ := controller.HouseService.GetHouseDetailWithTransactions(c.Request().Context(), request.HouseID)
+
+	if user.WalletAmount < house.PricePerMonth {
+		panic(exception.NewDataNotFoundError("Uang tidak cukup"))
 	}
 
 	emailBody, err := helper.RenderTemplate(data, "template/house_payment_confirmation.html")

@@ -47,7 +47,7 @@ func main() {
 	userService := service.NewUserService(userRepository, db)
 
 	paymentController := controller.NewPaymentController(paymentService, emailService, userService)
-	houseController := controller.NewHouseController(houseService, emailService)
+	houseController := controller.NewHouseController(houseService, emailService, userService)
 	userHouseTransactionController := controller.NewUserHouseTransactionController(userHouseTransactionService)
 	userController := controller.NewUserController(userService, userValidator)
 
