@@ -1,6 +1,7 @@
 package service
 
 import (
+	"beli-tanah/exception"
 	"beli-tanah/helper"
 	"beli-tanah/model/domain"
 	"beli-tanah/model/web"
@@ -46,7 +47,7 @@ func (service *HouseService) CheckPaymentAvailability(ctx context.Context, house
 
 	availableSlot := int64(house.UnitCount) - activeKeys
 	if availableSlot <= 0 {
-		return fmt.Errorf("no available slots for the selected dates")
+		return exception.NewDataNotFoundError("no available slots for the selected dates")
 	}
 
 	pendingCount, err := service.HouseRepository.CountPendingTransactions(ctx, tx, houseID, startDate, endDate)
@@ -57,7 +58,7 @@ func (service *HouseService) CheckPaymentAvailability(ctx context.Context, house
 	fmt.Print(pendingCount, activeKeys, availableSlot)
 
 	if pendingCount >= availableSlot {
-		return fmt.Errorf("no available slots, please wait until another transaction completes")
+		return exception.NewDataNotFoundError("no available slots, please wait until another transaction completes")
 	}
 
 	return nil
@@ -78,7 +79,7 @@ func (service *HouseService) CheckHouseAvailability(ctx context.Context, houseID
 	}
 
 	if activeKeys >= int64(house.UnitCount) {
-		return fmt.Errorf("no available slots for the selected dates")
+		return exception.NewDataNotFoundError("no available slots for the selected dates")
 	}
 
 	return nil
@@ -116,6 +117,7 @@ func (service *HouseService) BuyHouseTransaction(ctx context.Context, userID, ho
 
 	return web.BuyHouseResponse{
 		TransactionToken: tokenString,
+		ExpiredAt:        expiryTime,
 	}, nil
 }
 
@@ -124,9 +126,7 @@ func (service *HouseService) GetHouses(ctx context.Context, category web.HouseCa
 	defer helper.CommitOrRollback(tx)
 
 	houses, totalCount, err := service.HouseRepository.GetHouses(ctx, tx, category, page, limit)
-	if err != nil {
-		return nil, 0, err
-	}
+	helper.PanicIfError(err)
 
 	houseResponses := helper.MapDomainToBuyHouseResponse(houses)
 
@@ -138,29 +138,27 @@ func (s *HouseService) GetHouseDetailWithTransactions(ctx context.Context, house
 	defer helper.CommitOrRollback(tx)
 
 	house, transactions, err := s.HouseRepository.GetHouseWithTransactions(ctx, tx, houseID)
-	if err != nil {
-		return web.HouseDetailResponse{}, err
-	}
+	helper.PanicIfError(err)
 
 	var transactionResponses []web.UserHouseTransactionPreviewResponse
 	for _, transaction := range transactions {
 		transactionResponses = append(transactionResponses, web.UserHouseTransactionPreviewResponse{
-			UserID:          transaction.UserID,
-			StartDate:       transaction.StartDate,
-			EndDate:         transaction.EndDate,
+			UserID:    transaction.UserID,
+			StartDate: transaction.StartDate,
+			EndDate:   transaction.EndDate,
 		})
 	}
 
 	return web.HouseDetailResponse{
-		ID:            house.ID,
-		Latitude:      house.Latitude,
-		Longitude:     house.Longitude,
-		Address:       house.Address,
-		Category:      house.Category,
-		UnitCount:     house.UnitCount,
-		PricePerMonth: house.PricePerMonth,
-		CreatedAt:     house.CreatedAt,
-		UpdatedAt:     house.UpdatedAt,
+		ID:                    house.ID,
+		Latitude:              house.Latitude,
+		Longitude:             house.Longitude,
+		Address:               house.Address,
+		Category:              house.Category,
+		UnitCount:             house.UnitCount,
+		PricePerMonth:         house.PricePerMonth,
+		CreatedAt:             house.CreatedAt,
+		UpdatedAt:             house.UpdatedAt,
 		UserHouseTransactions: transactionResponses,
 	}, nil
 }

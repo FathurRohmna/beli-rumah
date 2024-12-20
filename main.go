@@ -3,6 +3,7 @@ package main
 import (
 	"beli-tanah/app"
 	"beli-tanah/controller"
+	"beli-tanah/exception"
 	pkgmiddleware "beli-tanah/middleware"
 	"beli-tanah/repository"
 	"beli-tanah/service"
@@ -57,6 +58,7 @@ func main() {
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 	}))
 	e.Use(middleware.Recover())
+	e.HTTPErrorHandler = exception.ErrorHandler
 
 	api := e.Group("/api")
 

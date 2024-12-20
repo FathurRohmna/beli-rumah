@@ -14,7 +14,8 @@ const (
 )
 
 type BuyHouseResponse struct {
-	TransactionToken string `json:"transaction_token"`
+	TransactionToken string    `json:"transaction_token"`
+	ExpiredAt        time.Time `json:"expired_at"`
 }
 
 type HouseResponse struct {

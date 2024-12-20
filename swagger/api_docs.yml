@@ -132,6 +132,57 @@ paths:
         500:
           $ref: "#/components/responses/InternalServerError"
 
+  /houses/buyhouse:
+    post:
+      summary: "Buy a house transaction"
+      description: "Handles the purchase of a house, generates a transaction token, and sends a confirmation email."
+      tags:
+        - "House Transactions"
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                house_id:
+                  type: string
+                  description: "The ID of the house being purchased."
+                  example: "house123"
+                start_date:
+                  type: string
+                  format: date
+                  description: "The start date of the transaction."
+                  example: "2024-12-20"
+                end_date:
+                  type: string
+                  format: date
+                  description: "The end date of the transaction."
+                  example: "2024-12-22"
+      responses:
+        200:
+          description: "Transaction successfully completed."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Transaction cancelled"
+        500:
+          description: "Internal server error."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal server error."
+  
   /houses/transaction/cancel:
     post:
       summary: "Cancel a transaction"
@@ -227,57 +278,7 @@ paths:
                   error:
                     type: string
                     example: "Internal server error."
-      
-  /houses/buyhouse:
-    post:
-      summary: "Buy a house transaction"
-      description: "Handles the purchase of a house, generates a transaction token, and sends a confirmation email."
-      tags:
-        - "House Transactions"
-      security:
-        - ApiKeyAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                house_id:
-                  type: string
-                  description: "The ID of the house being purchased."
-                  example: "house123"
-                start_date:
-                  type: string
-                  format: date
-                  description: "The start date of the transaction."
-                  example: "2024-12-20"
-                end_date:
-                  type: string
-                  format: date
-                  description: "The end date of the transaction."
-                  example: "2024-12-22"
-      responses:
-        200:
-          description: "Transaction successfully completed."
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Transaction cancelled"
-        500:
-          description: "Internal server error."
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Internal server error."
+  
   /houses:
     get:
       summary: Retrieve a list of houses based on category and location filters
