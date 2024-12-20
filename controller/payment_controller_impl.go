@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -88,6 +89,21 @@ func (controller *PaymentController) MidtransCallback(c echo.Context) error {
 		}
 	} else if callbackPayload.TransactionStatus == "cancel" || callbackPayload.TransactionStatus == "expire" || callbackPayload.TransactionStatus == "deny" {
 		log.Printf("Transaction %s was not successful. Status: %s\n", callbackPayload.OrderID, callbackPayload.TransactionStatus)
+	}
+
+	user, _ := controller.PaymentService.GetUserByOrderID(ctx, callbackPayload.OrderID)
+
+	data := map[string]string{
+		"Amount": strconv.FormatFloat(callbackPayload.GrossAmount, 'f', -1, 64),
+	}
+
+	emailBody, err := helper.RenderTemplate(data, "template/top_up_success.html")
+	if err != nil {
+		log.Fatalf("Error rendering template: %v", err)
+	}
+	err = controller.EmailService.SendEmail(ctx, user.Email, "Top Up success", emailBody)
+	if err != nil {
+		log.Fatalf("Error send email: %v", err)
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{

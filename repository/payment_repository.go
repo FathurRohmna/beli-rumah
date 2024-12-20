@@ -10,4 +10,5 @@ import (
 type IPaymentRepository interface {
 	TopUpUserWalletTransaction(ctx context.Context, tx *gorm.DB, transaction domain.Transaction) (domain.Transaction, error)
 	UpdateWalletAndTransaction(ctx context.Context, tx *gorm.DB, transactionId string, amount float64) error
+	GetUserByOrderID(ctx context.Context, tx *gorm.DB, orderID string) (*domain.UserHouse, error)
 }

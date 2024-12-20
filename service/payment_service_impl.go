@@ -32,7 +32,7 @@ func (service *PaymentService) TopUpUserWalletGeneratePayment(ctx context.Contex
 	tx := service.DB.Begin()
 	defer helper.CommitOrRollback(tx)
 
-	orderID := "TOPUP-" + time.Now().Format("20060102150405")
+	orderID := "TOPUP-" + time.Now().Local().Format("20060102150405")
 
 	transaction := domain.Transaction{
 		UserID:  userID,
@@ -73,8 +73,20 @@ func (service *PaymentService) UpdateWalletAndTransaction(ctx context.Context, t
 
 func (service *PaymentService) VerifyMidtransSignature(callback domain.MidtransCallback) bool {
 	serverKey := config.SetupMidtrans().ServerKey
-	data := callback.OrderID + fmt.Sprintf("%.0f", callback.GrossAmount) + serverKey
+	grossAmount := fmt.Sprintf("%.2f", callback.GrossAmount)
+	data := callback.OrderID + callback.StatusCode + grossAmount + serverKey
 
 	expectedSignature := fmt.Sprintf("%x", sha512.Sum512([]byte(data)))
+
 	return expectedSignature == callback.SignatureKey
+}
+
+func (service *PaymentService) GetUserByOrderID(ctx context.Context, orderID string) (*domain.UserHouse, error) {
+	tx := service.DB.Begin()
+	defer helper.CommitOrRollback(tx)
+
+	user, err := service.PaymentRepository.GetUserByOrderID(ctx, tx, orderID)
+	helper.PanicIfError(err)
+
+	return user, nil
 }

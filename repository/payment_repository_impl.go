@@ -32,7 +32,7 @@ func (r *PaymentRepository) UpdateWalletAndTransaction(ctx context.Context, tx *
 	if err := tx.WithContext(ctx).
 		Model(&domain.UserHouse{}).
 		Where("id = ?", transaction.UserID).
-		Update("wallet_balance", gorm.Expr("wallet_balance + ?", amount)).Error; err != nil {
+		Update("wallet_amount", gorm.Expr("wallet_amount + ?", amount)).Error; err != nil {
 		return err
 	}
 
@@ -42,4 +42,22 @@ func (r *PaymentRepository) UpdateWalletAndTransaction(ctx context.Context, tx *
 	}
 
 	return nil
+}
+
+func (r *PaymentRepository) GetUserByOrderID(ctx context.Context, tx *gorm.DB, orderID string) (*domain.UserHouse, error) {
+	var transaction domain.Transaction
+	if err := tx.WithContext(ctx).
+		Where("order_id = ?", orderID).
+		First(&transaction).Error; err != nil {
+		return nil, err
+	}
+
+	var user domain.UserHouse
+	if err := tx.WithContext(ctx).
+		Where("id = ?", transaction.UserID).
+		First(&user).Error; err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }
