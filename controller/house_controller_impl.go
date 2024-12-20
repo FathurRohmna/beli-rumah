@@ -73,8 +73,6 @@ func (controller *HouseController) GetHouses(c echo.Context) error {
 	if limit == 0 {
 		limit = 10
 	}
-	latitude, _ := strconv.ParseFloat(c.QueryParam("latitude"), 64)
-	longitude, _ := strconv.ParseFloat(c.QueryParam("longitude"), 64)
 
 	var houseCategory web.HouseCategory
 	switch category {
@@ -87,12 +85,13 @@ func (controller *HouseController) GetHouses(c echo.Context) error {
 	case "residentialComplex":
 		houseCategory = web.ResidentialComplex
 	default:
-		return c.JSON(http.StatusBadRequest, "Invalid category")
+		houseCategory = ""
 	}
 
-	houses, totalCount, err := controller.HouseService.GetHouses(c.Request().Context(), houseCategory, latitude, longitude, page, limit)
+
+	houses, totalCount, err := controller.HouseService.GetHouses(c.Request().Context(), houseCategory, page, limit)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -102,7 +101,7 @@ func (controller *HouseController) GetHouses(c echo.Context) error {
 }
 
 func (c *HouseController) GetHouseDetailWithTransactions(ctx echo.Context) error {
-	houseID := ctx.Param("house_id")
+	houseID := ctx.Param("houseId")
 
 	houseDetail, err := c.HouseService.GetHouseDetailWithTransactions(ctx.Request().Context(), houseID)
 	if err != nil {

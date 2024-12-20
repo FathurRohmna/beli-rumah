@@ -16,4 +16,6 @@ type House struct {
 
 	CreatedAt time.Time `gorm:"type:timestamp;default:current_timestamp;not null" json:"created_at"`
 	UpdatedAt time.Time `gorm:"type:timestamp;default:current_timestamp;not null" json:"updated_at"`
+
+	UserHouseTransactions []UserHouseTransaction `gorm:"foreignKey:HouseID" json:"user_house_transactions"`
 }

@@ -54,17 +54,20 @@ func (r *HouseRepository) CountPendingTransactions(ctx context.Context, tx *gorm
 	return count, nil
 }
 
-func (r *HouseRepository) GetHouses(ctx context.Context, tx *gorm.DB, category web.HouseCategory, latitude, longitude float64, page, limit int) ([]domain.House, int64, error) {
+func (r *HouseRepository) GetHouses(ctx context.Context, tx *gorm.DB, category web.HouseCategory, page, limit int) ([]domain.House, int64, error) {
 	var houses []domain.House
 	var totalCount int64
 	tx = tx.WithContext(ctx)
 
 	offset := (page - 1) * limit
 
-	query := tx.Model(&domain.House{}).Where("category = ?", category).
-		Order("ST_Distance(ST_SetSRID(ST_Point(longitude, latitude), 4326), ST_SetSRID(ST_Point(?, ?), 4326)) ASC").
-		Offset(offset).
-		Limit(limit)
+	query := tx.Model(&domain.House{})
+
+	if category != "" {
+		query = query.Where("category = ?", category)
+	}
+
+	query = query.Offset(offset).Limit(limit)
 
 	err := query.Find(&houses).Count(&totalCount).Error
 	if err != nil {
@@ -77,15 +80,16 @@ func (r *HouseRepository) GetHouses(ctx context.Context, tx *gorm.DB, category w
 func (r *HouseRepository) GetHouseWithTransactions(ctx context.Context, tx *gorm.DB, houseID string) (domain.House, []domain.UserHouseTransaction, error) {
 	var house domain.House
 	var transactions []domain.UserHouseTransaction
+
 	tx = tx.WithContext(ctx)
 
-	err := tx.Where("id = ?", houseID).First(&house).Error
-	if err != nil {
+	if err := tx.Where("id = ?", houseID).First(&house).Error; err != nil {
 		return domain.House{}, nil, err
 	}
 
-	err = tx.Preload("UserHouseTransactions").Where("house_id = ?", houseID).Order("start_date DESC").Find(&transactions).Error
-	if err != nil {
+	if err := tx.Where("house_id = ?", houseID).
+		Where("transaction_status != ?", "sold").
+		Find(&transactions).Error; err != nil {
 		return domain.House{}, nil, err
 	}
 

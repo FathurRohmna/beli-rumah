@@ -132,284 +132,6 @@ paths:
         500:
           $ref: "#/components/responses/InternalServerError"
 
-  /posts:
-    post:
-      tags:
-        - posts
-      summary: "Create a new post"
-      description: "Endpoint to create a new post."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: "object"
-              properties:
-                content:
-                  type: "string"
-                  example: "This is my first post."
-                image_url:
-                  type: "string"
-                  example: "https://example.com/image.jpg"
-              required:
-                - user_id
-                - content
-                - image_url
-      security:
-        - ApiKeyAuth: []
-      responses:
-        201:
-          description: "Post successfully created."
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  message:
-                    type: "string"
-                    example: "Post successfully created."
-                  post:
-                    $ref: '#/components/schemas/Post'
-        400:
-          $ref: "#/components/responses/BadRequest"
-        401:
-          $ref: "#/components/responses/UnauthorizedError"
-        500:
-          $ref: "#/components/responses/InternalServerError"
-
-    get:
-      tags:
-        - posts
-      summary: "Display all posts"
-      description: "Endpoint to display all posts."
-      security:
-        - ApiKeyAuth: []
-      responses:
-        200:
-          description: "Successfully retrieved all posts."
-          content:
-            application/json:
-              schema:
-                type: "array"
-                items:
-                  $ref: '#/components/schemas/Post'
-
-  /posts/{id}:
-    get:
-      tags:
-        - posts
-      summary: "Display post details"
-      description: "Endpoint to display post details by ID."
-      parameters:
-        - name: "id"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-      security:
-        - ApiKeyAuth: []
-      responses:
-        200:
-          description: "Post details successfully found."
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  post:
-                    $ref: '#/components/schemas/Post'
-                  comments:
-                    type: "array"
-                    items:
-                      $ref: '#/components/schemas/Comment'
-        400:
-          $ref: "#/components/responses/BadRequest"
-        401:
-          $ref: "#/components/responses/UnauthorizedError"
-        404:
-          $ref: '#/components/responses/NotFoundError'
-        500:
-          $ref: "#/components/responses/InternalServerError"
-
-    delete:
-      tags:
-        - posts
-      summary: "Delete post"
-      description: "Endpoint to delete post by ID."
-      parameters:
-        - name: "id"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-      security:
-        - ApiKeyAuth: []
-      responses:
-        200:
-          description: "Post successfully deleted."
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  message:
-                    type: "string"
-                    example: "Post successfully deleted."
-                  post:
-                    $ref: '#/components/schemas/Post'
-        400:
-          $ref: "#/components/responses/BadRequest"
-        401:
-          $ref: "#/components/responses/UnauthorizedError"
-        404:
-          $ref: '#/components/responses/NotFoundError'
-        500:
-          $ref: "#/components/responses/InternalServerError"
-
-  /comments:
-    post:
-      tags:
-        - comments
-      summary: "Create a new comment on a post"
-      description: "This endpoint creates a new comment for a given post."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: "object"
-              properties:
-                post_id:
-                  type: "string"
-                  example: "550e8400-e29b-41d4-a716-446655440000"
-                content:
-                  type: "string"
-                  example: "This is a great post!"
-              required:
-                - post_id
-                - content
-      security:
-        - ApiKeyAuth: []
-      responses:
-        201:
-          description: "Comment successfully created."
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  message:
-                    type: "string"
-                    example: "Comment successfully created."
-                  comment:
-                    $ref: '#/components/schemas/Comment'
-        400:
-          $ref: "#/components/responses/BadRequest"
-        401:
-          $ref: "#/components/responses/UnauthorizedError"
-        500:
-          $ref: "#/components/responses/InternalServerError"
-
-  /comments/{id}:
-    get:
-      tags:
-        - comments
-      summary: "Get a comment by ID"
-      description: "This endpoint retrieves a comment by its ID, including the owner of the comment and the associated post data."
-      parameters:
-        - name: "id"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-      security:
-        - ApiKeyAuth: []
-      responses:
-        200:
-          description: "Comment and associated post successfully found."
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  comment:
-                    $ref: '#/components/schemas/Comment'
-                  post:
-                    $ref: '#/components/schemas/Post'
-        400:
-          $ref: "#/components/responses/BadRequest"
-        401:
-          $ref: "#/components/responses/UnauthorizedError"
-        404:
-          $ref: '#/components/responses/NotFoundError'
-        500:
-          $ref: "#/components/responses/InternalServerError"
-        
-    delete:
-      tags:
-        - comments
-      summary: "Delete a comment by ID"
-      description: "This endpoint deletes a comment by its ID. Only the comment owner can delete it."
-      parameters:
-        - name: "id"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-      security:
-        - ApiKeyAuth: []
-      responses:
-        200:
-          description: "Comment successfully deleted."
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  message:
-                    type: "string"
-                    example: "Comment successfully deleted."
-                  comment:
-                    $ref: '#/components/schemas/Comment'
-        400:
-          $ref: "#/components/responses/BadRequest"
-        401:
-          $ref: "#/components/responses/UnauthorizedError"
-        404:
-          $ref: '#/components/responses/NotFoundError'
-        500:
-          $ref: "#/components/responses/InternalServerError"
-  /activities:
-    get:
-      tags:
-        - activities
-      summary: "Get user activities"
-      description: "This endpoint retrieves a list of activities for the logged-in user."
-      security:
-        - ApiKeyAuth: []
-      responses:
-        200:
-          description: "User activities successfully retrieved."
-          content:
-            application/json:
-              schema:
-                type: "array"
-                items:
-                  type: "object"
-                  properties:
-                    activity_id:
-                      type: "string"
-                      example: "12345"
-                    description:
-                      type: "string"
-                      example: "User commented on a post."
-                    timestamp:
-                      type: "string"
-                      format: "date-time"
-                      example: "2024-12-15T08:00:00Z"
-        500:
-          $ref: "#/components/responses/InternalServerError"
-
   /houses/transaction/cancel:
     post:
       summary: "Cancel a transaction"
@@ -556,6 +278,152 @@ paths:
                   error:
                     type: string
                     example: "Internal server error."
+  /houses:
+    get:
+      summary: Retrieve a list of houses based on category and location filters
+      description: |
+        Fetches a list of houses based on the provided filters such as category, location (latitude, longitude),
+        pagination (page, limit), and house category.
+      parameters:
+        - in: query
+          name: category
+          required: false
+          schema:
+            type: string
+            enum: [apartment, villa, house, residentialComplex]
+          description: Filter houses by category
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: The page number for pagination (defaults to 1)
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: The number of houses to return per page (defaults to 10)
+      responses:
+        '200':
+          description: A list of houses matching the criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  houses:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/House'
+                  totalCount:
+                    type: integer
+                    description: The total number of houses matching the criteria
+        '400':
+          description: Invalid category or request parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: The error message for invalid requests
+  /houses/{house_id}:
+    get:
+      summary: "Fetches the details of a specific house, including its transactions."
+      description: "Fetches the detailed information of a house, including its details and associated user house transactions."
+      operationId: "getHouseDetailWithTransactions"
+      parameters:
+        - name: "house_id"
+          in: "path"
+          description: "Unique identifier of the house"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        200:
+          description: "Successfully fetched house details with transactions."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  id:
+                    type: "string"
+                    description: "Unique identifier for the house"
+                  latitude:
+                    type: "number"
+                    format: "float"
+                    description: "Latitude of the house"
+                  longitude:
+                    type: "number"
+                    format: "float"
+                    description: "Longitude of the house"
+                  address:
+                    type: "string"
+                    description: "Address of the house"
+                  category:
+                    type: "string"
+                    description: "Category of the house (e.g., apartment, villa)"
+                  unit_count:
+                    type: "integer"
+                    description: "Number of units available in the house"
+                  price_per_month:
+                    type: "number"
+                    format: "float"
+                    description: "Price of the house per month"
+                  created_at:
+                    type: "string"
+                    format: "date-time"
+                    description: "Creation timestamp of the house entry"
+                  updated_at:
+                    type: "string"
+                    format: "date-time"
+                    description: "Last updated timestamp of the house entry"
+                  user_house_transactions:
+                    type: "array"
+                    items:
+                      type: "object"
+                      properties:
+                        id:
+                          type: "string"
+                          description: "Unique identifier for the transaction"
+                        user_id:
+                          type: "string"
+                          description: "ID of the user associated with the transaction"
+                        house_id:
+                          type: "string"
+                          description: "ID of the house involved in the transaction"
+                        status:
+                          type: "string"
+                          description: "Status of the transaction (e.g., active, completed)"
+                        start_date:
+                          type: "string"
+                          format: "date-time"
+                          description: "Start date of the transaction"
+                        end_date:
+                          type: "string"
+                          format: "date-time"
+                          description: "End date of the transaction"
+                        expired_at:
+                          type: "string"
+                          format: "date-time"
+                          description: "Expiry date of the transaction"
+        500:
+          description: "Internal Server Error, could not fetch house details."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  error:
+                    type: "string"
+                    example: "could not fetch house details"
+
 components:
   schemas:
     User:
@@ -620,6 +488,30 @@ components:
           format: "date-time"
           example: "2024-12-15T08:00:00Z"
         
+    House:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the house
+        category:
+          type: string
+          description: The category of the house (e.g., apartment, villa, etc.)
+        price:
+          type: number
+          format: float
+          description: The price of the house
+        address:
+          type: string
+          description: The address of the house
+        latitude:
+          type: number
+          format: float
+          description: The latitude of the house location
+        longitude:
+          type: number
+          format: float
+          description: The longitude of the house location
   responses:
     UnauthorizedError:
       description: Unauthorized

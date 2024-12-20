@@ -18,6 +18,12 @@ type UserHouseTransactionResponse struct {
 	ExpiredAt time.Time `json:"expired_at"`
 }
 
+type UserHouseTransactionPreviewResponse struct {
+	UserID    string    `json:"user_id"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
+}
+
 type TopUpUserWalletGeneratePaymentRequest struct {
 	Amount float64 `json:"amount"`
 }

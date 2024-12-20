@@ -72,6 +72,8 @@ func main() {
 
 	housesApi := api.Group("/houses")
 
+	housesApi.GET("", houseController.GetHouses)
+	housesApi.GET("/:houseId", houseController.GetHouseDetailWithTransactions)
 	housesApi.POST("/buyhouse", houseController.BuyHouseTransaction, pkgmiddleware.JWTMiddleware)
 	housesApi.POST(
 		"/transaction/cancel",
