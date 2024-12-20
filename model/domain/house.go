@@ -19,3 +19,9 @@ type House struct {
 
 	UserHouseTransactions []UserHouseTransaction `gorm:"foreignKey:HouseID" json:"user_house_transactions"`
 }
+
+type MyDetail struct {
+	User         UserHouse              `json:"user"`
+	Transactions []UserHouseTransaction `json:"transactions"`
+	Houses       []House                `json:"houses"`
+}

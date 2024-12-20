@@ -47,3 +47,44 @@ func (r *UserRepository) FindByUserId(ctx context.Context, tx *gorm.DB, userId s
 	}
 	return user, nil
 }
+
+func (r *UserRepository) FindMyDetail(ctx context.Context, tx *gorm.DB, userID string) (domain.MyDetail, error) {
+	var user domain.UserHouse
+	var transactions []domain.UserHouseTransaction
+	var houseIDs []string
+	var houses []domain.House
+
+	err := tx.WithContext(ctx).Where("id = ?", userID).First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.MyDetail{}, errors.New("user not found")
+		}
+		return domain.MyDetail{}, err
+	}
+
+	err = tx.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Find(&transactions).Error
+	if err != nil {
+		return domain.MyDetail{}, err
+	}
+
+	for _, transaction := range transactions {
+		houseIDs = append(houseIDs, transaction.HouseID)
+	}
+
+	err = tx.WithContext(ctx).
+		Where("id IN ?", houseIDs).
+		Find(&houses).Error
+	if err != nil {
+		return domain.MyDetail{}, err
+	}
+
+	myDetail := domain.MyDetail{
+		User:         user,
+		Transactions: transactions,
+		Houses:       houses,
+	}
+
+	return myDetail, nil
+}

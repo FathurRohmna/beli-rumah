@@ -66,6 +66,7 @@ func main() {
 
 	usersApi.POST("/login", userController.Login)
 	usersApi.POST("/register", userController.Register)
+	usersApi.GET("/me", userController.GetMyDetail, pkgmiddleware.JWTMiddleware)
 	usersApi.POST("/topup", paymentController.TopUpUserWallet, pkgmiddleware.JWTMiddleware)
 
 	internalApi := api.Group("/internal")

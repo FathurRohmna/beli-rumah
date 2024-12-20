@@ -10,7 +10,7 @@ paths:
   /users/register:
     post:
       tags:
-        - users
+        - Users
       summary: "Save new user data"
       description: "Endpoint to register a new user."
       requestBody:
@@ -57,7 +57,7 @@ paths:
   /users/login:
     post:
       tags:
-        - users
+        - Users
       summary: "Login to get access token"
       description: "Endpoint to login for registered users."
       requestBody:
@@ -93,11 +93,126 @@ paths:
           $ref: "#/components/responses/UnauthorizedError"
         500:
           $ref: "#/components/responses/InternalServerError"
-
+  /users/me:
+    get:
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - "Users"
+      summary: "Fetches the detailed information of a specific user, including their transactions and houses."
+      description: "Fetches detailed information of the user such as their profile and associated transactions and houses."
+      operationId: "getUserDetailWithTransactionsAndHouses"
+      responses:
+        200:
+          description: "Successfully fetched user details with transactions and houses."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  user:
+                    type: "object"
+                    properties:
+                      id:
+                        type: "string"
+                        description: "Unique identifier for the user"
+                      email:
+                        type: "string"
+                        description: "Email of the user"
+                      name:
+                        type: "string"
+                        description: "Name of the user"
+                      created_at:
+                        type: "string"
+                        format: "date-time"
+                        description: "Creation timestamp of the user account"
+                      updated_at:
+                        type: "string"
+                        format: "date-time"
+                        description: "Last updated timestamp of the user account"
+                  transactions:
+                    type: "array"
+                    items:
+                      type: "object"
+                      properties:
+                        id:
+                          type: "string"
+                          description: "Unique identifier for the transaction"
+                        user_id:
+                          type: "string"
+                          description: "ID of the user associated with the transaction"
+                        house_id:
+                          type: "string"
+                          description: "ID of the house involved in the transaction"
+                        status:
+                          type: "string"
+                          description: "Status of the transaction (e.g., active, completed)"
+                        start_date:
+                          type: "string"
+                          format: "date-time"
+                          description: "Start date of the transaction"
+                        end_date:
+                          type: "string"
+                          format: "date-time"
+                          description: "End date of the transaction"
+                        expired_at:
+                          type: "string"
+                          format: "date-time"
+                          description: "Expiry date of the transaction"
+                  houses:
+                    type: "array"
+                    items:
+                      type: "object"
+                      properties:
+                        id:
+                          type: "string"
+                          description: "Unique identifier for the house"
+                        latitude:
+                          type: "number"
+                          format: "float"
+                          description: "Latitude of the house"
+                        longitude:
+                          type: "number"
+                          format: "float"
+                          description: "Longitude of the house"
+                        address:
+                          type: "string"
+                          description: "Address of the house"
+                        category:
+                          type: "string"
+                          description: "Category of the house (e.g., apartment, villa)"
+                        unit_count:
+                          type: "integer"
+                          description: "Number of units available in the house"
+                        price_per_month:
+                          type: "number"
+                          format: "float"
+                          description: "Price of the house per month"
+        400:
+          description: "Bad Request, userId is required or invalid."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  error:
+                    type: "string"
+                    example: "userId is required or invalid"
+        500:
+          description: "Internal Server Error, could not fetch user details."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  error:
+                    type: "string"
+                    example: "could not fetch user details"
+        
   /users/topup:
     post:
       tags:
-        - users
+        - Users
       summary: "Top up user wallet"
       description: "Endpoint to generate a payment request for top-up operations."
       requestBody:
@@ -131,7 +246,7 @@ paths:
           $ref: "#/components/responses/UnauthorizedError"
         500:
           $ref: "#/components/responses/InternalServerError"
-
+          
   /houses/buyhouse:
     post:
       summary: "Buy a house transaction"
@@ -185,6 +300,8 @@ paths:
   
   /houses/transaction/cancel:
     post:
+      security:
+        - ApiKeyAuth: []
       summary: "Cancel a transaction"
       description: "Cancels a house transaction if it's still pending."
       tags:
@@ -233,6 +350,8 @@ paths:
 
   /houses/transaction/confirm:
     post:
+      security:
+        - ApiKeyAuth: []
       summary: "Confirm a transaction"
       description: "Confirms a house transaction and marks it as sold."
       tags:
@@ -281,6 +400,8 @@ paths:
   
   /houses:
     get:
+      tags:
+        - "Houses"
       summary: Retrieve a list of houses based on category and location filters
       description: |
         Fetches a list of houses based on the provided filters such as category, location (latitude, longitude),
@@ -334,6 +455,8 @@ paths:
                     description: The error message for invalid requests
   /houses/{house_id}:
     get:
+      tags:
+          - "Houses"
       summary: "Fetches the details of a specific house, including its transactions."
       description: "Fetches the detailed information of a house, including its details and associated user house transactions."
       operationId: "getHouseDetailWithTransactions"
@@ -425,6 +548,84 @@ paths:
                     type: "string"
                     example: "could not fetch house details"
 
+  /internal/topup/midtrans-callback:
+    post:
+      tags:
+          - internal
+      summary: Midtrans Callback Handler
+      description: Processes callbacks from Midtrans to update wallet and transaction status.
+      operationId: handleMidtransCallback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                order_id:
+                  type: string
+                  description: Unique identifier for the order.
+                  example: "123456789"
+                gross_amount:
+                  type: string
+                  description: The transaction amount in string format.
+                  example: "100000.50"
+                transaction_status:
+                  type: string
+                  description: Status of the transaction.
+                  example: "settlement"
+                status_code:
+                  type: string
+                  description: Status code returned by Midtrans.
+                  example: "200"
+                signature_key:
+                  type: string
+                  description: Key used to verify the authenticity of the callback.
+                  example: "abc123"
+      responses:
+        "200":
+          description: Callback successfully processed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Callback processed successfully"
+        "400":
+          description: Invalid or malformed payload.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid payload"
+        "401":
+          description: Invalid signature key.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid signature"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "An error occurred while processing the callback."
+      security:
+        - ApiKeyAuth: []
+      
 components:
   schemas:
     User:
@@ -446,49 +647,6 @@ components:
           type: "integer"
           example: 25
 
-    Post:
-      type: "object"
-      properties:
-        id:
-          type: "string"
-          example: "550e8400-e29b-41d4-a716-446655440000"
-        user_id:
-          type: "string"
-          example: "550e8400-e29b-41d4-a716-446655440000"
-        content:
-          type: "string"
-          example: "This is my first post."
-        image_url:
-          type: "string"
-          example: "https://example.com/image.jpg"
-
-    Comment:
-      type: "object"
-      properties:
-        id:
-          type: "string"
-          example: "550e8400-e29b-41d4-a716-446655440000"
-        author_id:
-          type: "string"
-          example: "550e8400-e29b-41d4-a716-446655440000"
-        content:
-          type: "string"
-          example: "Nice post!"
-
-    Activity:
-      type: "object"
-      properties:
-        activity_id:
-          type: "string"
-          example: "12345"
-        description:
-          type: "string"
-          example: "User commented on a post."
-        timestamp:
-          type: "string"
-          format: "date-time"
-          example: "2024-12-15T08:00:00Z"
-        
     House:
       type: object
       properties:

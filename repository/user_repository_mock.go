@@ -28,3 +28,11 @@ func (m *IUserRepositoryMock) Save(ctx context.Context, tx *gorm.DB, user domain
 	args := m.Mock.Called(ctx, tx, user)
 	return args.Get(0).(domain.UserHouse), args.Error(1)
 }
+
+func (m *IUserRepositoryMock) FindMyDetail(ctx context.Context, tx *gorm.DB, userID string) (domain.MyDetail, error) {
+	args := m.Mock.Called(ctx, tx, userID)
+	if args.Get(0) == nil {
+		return domain.MyDetail{}, args.Error(1)
+	}
+	return args.Get(0).(domain.MyDetail), args.Error(1)
+}

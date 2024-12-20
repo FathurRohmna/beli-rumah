@@ -79,9 +79,6 @@ func (service *UserService) Register(ctx context.Context, userRequest web.Regist
 }
 
 func (service *UserService) GetUserById(ctx context.Context, userId string) web.UserResponse {
-	// tx := service.DB.Begin()
-	// defer helper.CommitOrRollback(tx)
-
 	user, err := service.UserRepository.FindByUserId(ctx, service.DB, userId)
 	if err != nil {
 		if err.Error() == "user not found" {
@@ -96,4 +93,56 @@ func (service *UserService) GetUserById(ctx context.Context, userId string) web.
 		Email: user.Email,
 		Name:  user.Name,
 	}
+}
+
+func (service *UserService) GetMyDetail(ctx context.Context, userId string) web.MyDetailResponse {
+	myDetail, err := service.UserRepository.FindMyDetail(ctx, service.DB, userId)
+	if err != nil {
+		if err.Error() == "user not found" {
+			panic(exception.NewDataNotFoundError("user not found"))
+		}
+		panic(err)
+	}
+
+	return web.MyDetailResponse{
+		User: web.UserResponse{
+			ID:    myDetail.User.ID,
+			Email: myDetail.User.Email,
+			Name:  myDetail.User.Name,
+		},
+		Transactions: mapTransactionsToResponse(myDetail.Transactions),
+		Houses:       mapHousesToResponse(myDetail.Houses),
+	}
+}
+
+func mapTransactionsToResponse(transactions []domain.UserHouseTransaction) []web.TransactionResponse {
+	var response []web.TransactionResponse
+	for _, txn := range transactions {
+		response = append(response, web.TransactionResponse{
+			ID:                txn.ID,
+			UserID:            txn.UserID,
+			HouseID:           txn.HouseID,
+			TransactionStatus: txn.TransactionStatus,
+			StartDate:         txn.StartDate,
+			EndDate:           txn.EndDate,
+			ExpiredAt:         txn.ExpiredAt,
+		})
+	}
+	return response
+}
+
+func mapHousesToResponse(houses []domain.House) []web.DetailHouseResponse {
+	var response []web.DetailHouseResponse
+	for _, house := range houses {
+		response = append(response, web.DetailHouseResponse{
+			ID:            house.ID,
+			Latitude:      house.Latitude,
+			Longitude:     house.Longitude,
+			Address:       house.Address,
+			Category:      house.Category,
+			UnitCount:     house.UnitCount,
+			PricePerMonth: house.PricePerMonth,
+		})
+	}
+	return response
 }

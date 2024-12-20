@@ -52,3 +52,14 @@ func (controller *UserController) Login(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{"token": token})
 }
+
+func (controller *UserController) GetMyDetail(c echo.Context) error {
+	userID, ok := c.Get("user_id").(string)
+	if !ok || userID == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"info": "Invalid or missing user ID", "message": "UNAUTHORIZED"})
+	}
+
+	myDetail := controller.UserService.GetMyDetail(c.Request().Context(), userID)
+
+	return c.JSON(http.StatusOK, myDetail)
+}
