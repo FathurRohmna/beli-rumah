@@ -2,7 +2,6 @@ package service
 
 import (
 	"beli-tanah/exception"
-	"beli-tanah/helper"
 	"beli-tanah/model/web"
 	"beli-tanah/repository"
 	"context"
@@ -24,28 +23,21 @@ func NewUserHouseTransactionService(userHouseTransactionRepository repository.IU
 }
 
 func (service *UserHouseTransactionService) CancelTransaction(ctx context.Context, userID, transactionID string) error {
-	tx := service.DB.Begin()
-
-	if err := service.UserHouseTransactionRepository.CancelTransaction(ctx, tx, transactionID); err != nil {
+	if err := service.UserHouseTransactionRepository.CancelTransaction(ctx, service.DB, transactionID); err != nil {
 		return fmt.Errorf("failed to cancel transaction: %v", err)
 	}
 	return nil
 }
 
 func (service *UserHouseTransactionService) ConfirmTransaction(ctx context.Context, userID, transactionID string) error {
-	tx := service.DB.Begin()
-
-	if err := service.UserHouseTransactionRepository.ConfirmTransaction(ctx, tx, transactionID); err != nil {
+	if err := service.UserHouseTransactionRepository.ConfirmTransaction(ctx, service.DB, transactionID); err != nil {
 		return fmt.Errorf("failed to confirm transaction: %v", err)
 	}
 	return nil
 }
 
 func (service *UserHouseTransactionService) FindTransactionById(ctx context.Context, transactionID string) (web.UserHouseTransactionResponse, error) {
-	tx := service.DB.Begin()
-	defer helper.CommitOrRollback(tx)
-
-	transaction, err := service.UserHouseTransactionRepository.FindTransactionById(ctx, tx, transactionID)
+	transaction, err := service.UserHouseTransactionRepository.FindTransactionById(ctx, service.DB, transactionID)
 	if err != nil {
 		if err.Error() == "transaction not found" {
 			panic(exception.NewDataNotFoundError("transaction not found"))

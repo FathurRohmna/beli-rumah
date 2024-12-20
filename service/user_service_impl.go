@@ -27,10 +27,7 @@ func NewUserService(userRepository repository.IUserRepository, DB *gorm.DB) *Use
 }
 
 func (service *UserService) Login(ctx context.Context, userRequest web.LoginUserRequest) string {
-	tx := service.DB.Begin()
-	defer helper.CommitOrRollback(tx)
-
-	user, err := service.UserRepository.FindByEmail(ctx, tx, userRequest.Email)
+	user, err := service.UserRepository.FindByEmail(ctx, service.DB, userRequest.Email)
 	if err != nil {
 		if err.Error() == "user not found" {
 			panic(exception.NewDataNotFoundError("Username not found"))
@@ -55,10 +52,10 @@ func (service *UserService) Login(ctx context.Context, userRequest web.LoginUser
 }
 
 func (service *UserService) Register(ctx context.Context, userRequest web.RegisterUserRequest) web.UserResponse {
-	tx := service.DB.Begin()
-	defer helper.CommitOrRollback(tx)
+	// tx := service.DB.Begin()
+	// defer helper.CommitOrRollback(tx)
 
-	_, err := service.UserRepository.FindByEmail(ctx, tx, userRequest.Email)
+	_, err := service.UserRepository.FindByEmail(ctx, service.DB, userRequest.Email)
 	if err == nil {
 		panic(exception.NewInvalidCredentialError("Email is already registered"))
 	}
@@ -71,7 +68,7 @@ func (service *UserService) Register(ctx context.Context, userRequest web.Regist
 		Password: string(hash),
 		Name:     userRequest.Name,
 	}
-	createdUser, err := service.UserRepository.Save(ctx, tx, user)
+	createdUser, err := service.UserRepository.Save(ctx, service.DB, user)
 	helper.PanicIfError(err)
 
 	return web.UserResponse{
@@ -82,10 +79,10 @@ func (service *UserService) Register(ctx context.Context, userRequest web.Regist
 }
 
 func (service *UserService) GetUserById(ctx context.Context, userId string) web.UserResponse {
-	tx := service.DB.Begin()
-	defer helper.CommitOrRollback(tx)
+	// tx := service.DB.Begin()
+	// defer helper.CommitOrRollback(tx)
 
-	user, err := service.UserRepository.FindByUserId(ctx, tx, userId)
+	user, err := service.UserRepository.FindByUserId(ctx, service.DB, userId)
 	if err != nil {
 		if err.Error() == "user not found" {
 			panic(exception.NewDataNotFoundError("user not found"))
